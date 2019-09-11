@@ -1,0 +1,62 @@
+plugins {
+    id 'java'
+    id 'checkstyle'
+    id 'jacoco'
+}
+
+defaultTasks 'clean', 'build'
+
+group = projectGroup
+version = projectVersion
+sourceCompatibility = projectSourceCompatibility
+targetCompatibility = projectSourceCompatibility
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    checkstyle 'com.puppycrawl.tools:checkstyle:8.12'
+    testCompile 'junit:junit:4.12'
+}
+
+checkstyle {
+    toolVersion = '8.12'
+}
+
+test {
+    testLogging {
+        showStandardStreams = true
+        exceptionFormat = 'full'
+    }
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': projectName,
+                   'Implementation-Version': projectVersion,
+                   'Implementation-Vendor' : projectAuthor
+    }
+}
+
+javadoc {
+    title = "<h1>$projectName</h1>"
+    options.bottom = "<i>Copyright &#169; 2019 $projectAuthor.</i>"
+    if (JavaVersion.current() == JavaVersion.VERSION_1_10) {
+        options.addBooleanOption 'html5', true
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled true
+    }
+}
+
+check.dependsOn jacocoTestReport
+
+wrapper {
+    gradleVersion = '4.10.2'
+    distributionType = 'ALL'
+}
