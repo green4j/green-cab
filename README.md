@@ -43,7 +43,7 @@ A message sender:
     try {
         cab.send(message);
     } catch (InterruptedException e) {
-        // happens if the current thread
+        // happens if the current thread was interrupted
     }
 ```
 
