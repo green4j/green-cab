@@ -28,7 +28,7 @@ public class CabPlayground {
         System.out.println("\t bye          - Finish the game");
         System.out.println();
 
-        cab = new CabBlocking(bufferSize);
+        cab = new CabBackingOff<>(bufferSize, 100, 1000);
 
         producers = new Producer[producerCount];
         for (int i = 0; i < producers.length; i++) {

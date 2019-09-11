@@ -191,19 +191,19 @@ public abstract class Cab<E, M> extends CabPad4 {
 
         try {
             CONSUMER_SEQUENCE_OFFSET = UNSAFE.objectFieldOffset(
-                ConsumerSequence.class.getDeclaredField("consumerSequence"));
+                    ConsumerSequence.class.getDeclaredField("consumerSequence"));
         } catch (final Exception ex) {
             throw new Error(ex);
         }
         try {
             UNCOMMITTED_PRODUCERS_SEQUENCE_OFFSET = UNSAFE.objectFieldOffset(
-                UncommittedProducersSequence.class.getDeclaredField("uncommittedProducersSequence"));
+                    UncommittedProducersSequence.class.getDeclaredField("uncommittedProducersSequence"));
         } catch (final Exception ex) {
             throw new Error(ex);
         }
         try {
             MESSAGE_OFFSET = UNSAFE.objectFieldOffset(
-                Message.class.getDeclaredField("message"));
+                    Message.class.getDeclaredField("message"));
         } catch (final Exception ex) {
             throw new Error(ex);
         }
@@ -219,15 +219,15 @@ public abstract class Cab<E, M> extends CabPad4 {
 
     private final Object mutex = new Object();
 
-    private final long spinTimeoutNanos;
-    private final long yieldTimeoutNanos;
+    private final long maxSpins;
+    private final long maxYields;
 
     protected Cab(
-        final int bufferSize,
-        final WaitingStaregy waitingStaregy,
-        final long spinTimeoutNanos,
-        final long yieldTimeoutNanos,
-        final Supplier<E> supplier) {
+            final int bufferSize,
+            final WaitingStaregy waitingStaregy,
+            final long maxSpins,
+            final long maxYields,
+            final Supplier<E> supplier) {
 
         if (bufferSize < 1) {
             throw new IllegalArgumentException(BUFFER_SIZE_MUST_NOT_BE_LESS_THAN_1_MESSAGE);
@@ -241,8 +241,8 @@ public abstract class Cab<E, M> extends CabPad4 {
         this.entryStates = new int[normalizedBufferSize + 2 * STATE_ARRAY_PAD];
 
         this.waitingStaregy = waitingStaregy;
-        this.spinTimeoutNanos = spinTimeoutNanos;
-        this.yieldTimeoutNanos = yieldTimeoutNanos;
+        this.maxSpins = maxSpins;
+        this.maxYields = maxYields;
 
         UNSAFE.putLongVolatile(this, CONSUMER_SEQUENCE_OFFSET, INITIAL_SEQUENCE);
         UNSAFE.putLongVolatile(this, UNCOMMITTED_PRODUCERS_SEQUENCE_OFFSET, INITIAL_SEQUENCE);
@@ -258,6 +258,7 @@ public abstract class Cab<E, M> extends CabPad4 {
 
     /**
      * Returns actual Ring Buffer's size which is the next power of two of a value passed to the constructor.
+     *
      * @return actual buffer size
      */
     public int bufferSize() {
@@ -267,12 +268,13 @@ public abstract class Cab<E, M> extends CabPad4 {
     /**
      * Returns a sequence for a producer thread to address the next available entry with getEntry(sequence),
      * setEntry(sequence) or removeEntry(sequence).
+     *
      * @return sequence to address available entry
      * @throws InterruptedException if the current thread was interrupted
      */
     public long producerNext() throws InterruptedException {
         final long nextSequence = UNSAFE.getAndAddLong(
-            this, UNCOMMITTED_PRODUCERS_SEQUENCE_OFFSET, 1L) + 1L; // fetch-and-add
+                this, UNCOMMITTED_PRODUCERS_SEQUENCE_OFFSET, 1L) + 1L; // fetch-and-add
 
         while (true) {
             final long cs = UNSAFE.getLongVolatile(this, CONSUMER_SEQUENCE_OFFSET);
@@ -294,6 +296,7 @@ public abstract class Cab<E, M> extends CabPad4 {
 
     /**
      * Commits the sequence to make it available for the consumer thread to be read.
+     *
      * @param sequence to be committed
      */
     public void producerCommit(final long sequence) {
@@ -323,6 +326,7 @@ public abstract class Cab<E, M> extends CabPad4 {
 
     /**
      * Sends a message to the Channel.
+     *
      * @param msg a message to be sent
      * @throws InterruptedException if the current thread was interrupted
      */
@@ -353,34 +357,46 @@ public abstract class Cab<E, M> extends CabPad4 {
             }
 
             case BACKING_OFF: {
-                long startTime = 0;
-                int spinTries = SPIN_TRIES;
+                int state = 0;
+                long spins = 0;
+                long yields = 0;
 
                 final Object m = mutex;
 
                 _endOfWaiting:
                 while (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
+                    switch (state) {
+                        case 0: // initial state
+                            state = 1;
+                            spins++;
+                            break;
 
-                    if (--spinTries == 0) {
-                        if (startTime == 0) {
-                            startTime = System.nanoTime();
-                        } else {
-                            final long timeDelta = System.nanoTime() - startTime;
-                            if (timeDelta > yieldTimeoutNanos) {
+                        case 1: // spinning
+                            Utils.onSpinWait();
+                            if (++spins > maxSpins) {
+                                state = 2;
+                            }
+                            break;
 
-                                synchronized (m) {
-                                    while (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
-
-                                        m.wait();
-
-                                    }
-                                    break _endOfWaiting;
-                                }
-                            } else if (timeDelta > spinTimeoutNanos) {
+                        case 2: // yielding
+                            if (++yields > maxYields) {
+                                state = 3;
+                            } else {
                                 Thread.yield();
                             }
-                        }
-                        spinTries = SPIN_TRIES;
+                            break;
+
+                        case 3: // wait with mutex
+                            synchronized (m) {
+                                while (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
+
+                                    m.wait();
+
+                                }
+                                break _endOfWaiting;
+                            }
+                        default:
+                            throw new IllegalStateException();
                     }
 
                     if (Thread.interrupted()) {
@@ -391,6 +407,7 @@ public abstract class Cab<E, M> extends CabPad4 {
                 synchronized (m) {
                     m.notifyAll();
                 }
+                
                 break;
             }
 
@@ -421,6 +438,7 @@ public abstract class Cab<E, M> extends CabPad4 {
 
     /**
      * Returns a sequence for the consumer thread to address next available message or entry.
+     *
      * @return sequence to be read. If the value is MESSAGE_RECEIVED_SEQUENCE, a message is ready to be read with getMessage(),
      * otherwise new entry can be accessed with getEntry(sequence).
      * <p>
@@ -479,38 +497,50 @@ public abstract class Cab<E, M> extends CabPad4 {
             }
 
             case BACKING_OFF: {
-                long startTime = 0;
-                int spinTries = SPIN_TRIES;
+                int state = 0;
+                long spins = 0;
+                long yields = 0;
 
                 _endOfWaiting:
                 while (UNSAFE.getIntVolatile(states, address) == 0) {
+                    switch (state) {
+                        case 0: // initial state
+                            state = 1;
+                            spins++;
+                            break;
 
-                    if (--spinTries == 0) {
-                        if (startTime == 0) {
-                            startTime = System.nanoTime();
-                        } else {
-                            final long timeDelta = System.nanoTime() - startTime;
-                            if (timeDelta > yieldTimeoutNanos) {
+                        case 1: // spinning
+                            Utils.onSpinWait();
+                            if (++spins > maxSpins) {
+                                state = 2;
+                            }
+                            break;
 
-                                final Object m = mutex;
-
-                                synchronized (m) {
-                                    while (UNSAFE.getIntVolatile(states, address) == 0) {
-
-                                        m.wait();
-
-                                        messageCache = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
-                                        if (messageCache != null) {
-                                            return MESSAGE_RECEIVED_SEQUENCE;
-                                        }
-                                    }
-                                    break _endOfWaiting;
-                                }
-                            } else if (timeDelta > spinTimeoutNanos) {
+                        case 2: // yielding
+                            if (++yields > maxYields) {
+                                state = 3;
+                            } else {
                                 Thread.yield();
                             }
-                        }
-                        spinTries = SPIN_TRIES;
+                            break;
+
+                        case 3: // wait with mutex
+                            final Object m = mutex;
+
+                            synchronized (m) {
+                                while (UNSAFE.getIntVolatile(states, address) == 0) {
+
+                                    m.wait();
+
+                                    messageCache = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
+                                    if (messageCache != null) {
+                                        return MESSAGE_RECEIVED_SEQUENCE;
+                                    }
+                                }
+                                break _endOfWaiting;
+                            }
+                        default:
+                            throw new IllegalStateException();
                     }
 
                     if (Thread.interrupted()) {
@@ -560,6 +590,7 @@ public abstract class Cab<E, M> extends CabPad4 {
      * Commits the current consumer's sequence to signal the consumer ir ready to process next message or next entry.
      * <p>
      * This method can be called from one single consumer thread only.
+     *
      * @param sequence to be committed
      */
     public void consumerCommit(final long sequence) {
@@ -594,6 +625,7 @@ public abstract class Cab<E, M> extends CabPad4 {
 
     /**
      * Returns an entry from the position identified by the sequence from the Ring Buffer.
+     *
      * @param sequence identifier of the entry's position
      * @return the entry
      */
@@ -604,6 +636,7 @@ public abstract class Cab<E, M> extends CabPad4 {
 
     /**
      * Removes an entry from the position identified by the sequence from the Ring Buffer.
+     *
      * @param sequence identifier of the entry's position
      * @return removed entry
      */
@@ -617,8 +650,9 @@ public abstract class Cab<E, M> extends CabPad4 {
 
     /**
      * Sets an entry to the position identified by the sequence in the Ring Buffer.
+     *
      * @param sequence identifier of the entry's position
-     * @param entry to be set
+     * @param entry    to be set
      */
     public void setEntry(final long sequence, final E entry) {
         final int address = (int) entryAddress(sequence);
@@ -627,6 +661,7 @@ public abstract class Cab<E, M> extends CabPad4 {
 
     /**
      * Returns currently available message from the Channel
+     *
      * @return a message
      */
     @SuppressWarnings("unchecked")
