@@ -149,8 +149,6 @@ public abstract class Cab<E, M> extends CabPad4 {
     private static final String UNEXPECTED_INT_ELEMENT_SIZE_MESSAGE = "Unexpected int[] element size";
     private static final String BUFFER_SIZE_MUST_NOT_BE_LESS_THAN_1_MESSAGE = "bufferSize must not be less than 1";
 
-    private static final int SPIN_TRIES = 1000;
-
     private static final Unsafe UNSAFE = Utils.getUnsafe();
 
     private static final int CACHE_LINE_SIZE = 64;
@@ -386,7 +384,7 @@ public abstract class Cab<E, M> extends CabPad4 {
                             }
                             break;
 
-                        case 3: // wait with mutex
+                        case 3: // wait with the mutex
                             synchronized (m) {
                                 while (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
 
@@ -446,14 +444,15 @@ public abstract class Cab<E, M> extends CabPad4 {
      * @throws InterruptedException if the current thread was interrupted
      */
     public long consumerNext() throws InterruptedException {
-        long cs = UNSAFE.getLong(this, CONSUMER_SEQUENCE_OFFSET); // this thread owns the value,
-        // so, no any membars required to read
-
         // check the message first
         messageCache = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
         if (messageCache != null) {
             return MESSAGE_RECEIVED_SEQUENCE;
         }
+
+        // continue with the buffer and the message again
+        long cs = UNSAFE.getLong(this, CONSUMER_SEQUENCE_OFFSET); // this thread owns the value,
+        // so, no any membars required to read
 
         cs++;
 
@@ -524,7 +523,7 @@ public abstract class Cab<E, M> extends CabPad4 {
                             }
                             break;
 
-                        case 3: // wait with mutex
+                        case 3: // wait with the mutex
                             final Object m = mutex;
 
                             synchronized (m) {
