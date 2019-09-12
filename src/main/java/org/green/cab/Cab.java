@@ -359,8 +359,6 @@ public abstract class Cab<E, M> extends CabPad4 {
                 long spins = 0;
                 long yields = 0;
 
-                final Object m = mutex;
-
                 _endOfWaiting:
                 while (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
                     switch (state) {
@@ -385,12 +383,16 @@ public abstract class Cab<E, M> extends CabPad4 {
                             break;
 
                         case 3: // wait with the mutex
+                            final Object m = mutex;
+
                             synchronized (m) {
                                 while (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
 
                                     m.wait();
 
                                 }
+                                m.notifyAll();
+
                                 break _endOfWaiting;
                             }
                         default:
@@ -402,29 +404,23 @@ public abstract class Cab<E, M> extends CabPad4 {
                     }
                 }
 
-                synchronized (m) {
-                    m.notifyAll();
-                }
-
                 break;
             }
 
             case BLOCKING: {
-                final Object m = mutex;
-
                 if (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
+                    final Object m = mutex;
+
                     synchronized (m) {
                         while (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
 
                             m.wait();
 
                         }
+                        mutex.notifyAll();
                     }
                 }
 
-                synchronized (mutex) {
-                    mutex.notifyAll();
-                }
                 break;
             }
 
