@@ -63,7 +63,7 @@ public class CabTest {
 
         final int index = BUFFER_SIZE / 2;
 
-        long entry = cab.removeEntry(index);
+        final long entry = cab.removeEntry(index);
 
         assertEquals(index, entry);
 

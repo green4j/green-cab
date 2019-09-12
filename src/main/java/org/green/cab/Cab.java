@@ -221,11 +221,11 @@ public abstract class Cab<E, M> extends CabPad4 {
     private final long maxYields;
 
     protected Cab(
-            final int bufferSize,
-            final WaitingStaregy waitingStaregy,
-            final long maxSpins,
-            final long maxYields,
-            final Supplier<E> supplier) {
+        final int bufferSize,
+        final WaitingStaregy waitingStaregy,
+        final long maxSpins,
+        final long maxYields,
+        final Supplier<E> supplier) {
 
         if (bufferSize < 1) {
             throw new IllegalArgumentException(BUFFER_SIZE_MUST_NOT_BE_LESS_THAN_1_MESSAGE);
@@ -272,7 +272,7 @@ public abstract class Cab<E, M> extends CabPad4 {
      */
     public long producerNext() throws InterruptedException {
         final long nextSequence = UNSAFE.getAndAddLong(
-                this, UNCOMMITTED_PRODUCERS_SEQUENCE_OFFSET, 1L) + 1L; // fetch-and-add
+            this, UNCOMMITTED_PRODUCERS_SEQUENCE_OFFSET, 1L) + 1L; // fetch-and-add
 
         while (true) {
             final long cs = UNSAFE.getLongVolatile(this, CONSUMER_SEQUENCE_OFFSET);
@@ -405,7 +405,7 @@ public abstract class Cab<E, M> extends CabPad4 {
                 synchronized (m) {
                     m.notifyAll();
                 }
-                
+
                 break;
             }
 
@@ -437,8 +437,8 @@ public abstract class Cab<E, M> extends CabPad4 {
     /**
      * Returns a sequence for the consumer thread to address next available message or entry.
      *
-     * @return sequence to be read. If the value is MESSAGE_RECEIVED_SEQUENCE, a message is ready to be read with getMessage(),
-     * otherwise new entry can be accessed with getEntry(sequence).
+     * @return sequence to be read. If the value is MESSAGE_RECEIVED_SEQUENCE, a message is ready to be read
+     * with getMessage(), otherwise new entry can be accessed with getEntry(sequence).
      * <p>
      * This method can be called from one single consumer thread only.
      * @throws InterruptedException if the current thread was interrupted
