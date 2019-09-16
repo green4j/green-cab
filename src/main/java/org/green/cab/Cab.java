@@ -445,8 +445,11 @@ public abstract class Cab<E, M> extends CabPad4 {
      */
     public long consumerNext() throws InterruptedException {
         // check the message first
-        messageCache = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
-        if (messageCache != null) {
+        Object msg;
+
+        msg = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
+        if (msg != null) {
+            messageCache = msg;
             return MESSAGE_RECEIVED_SEQUENCE;
         }
 
@@ -470,8 +473,9 @@ public abstract class Cab<E, M> extends CabPad4 {
                         throw new InterruptedException();
                     }
 
-                    messageCache = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
-                    if (messageCache != null) {
+                    msg = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
+                    if (msg != null) {
+                        messageCache = msg;
                         return MESSAGE_RECEIVED_SEQUENCE;
                     }
                 }
@@ -487,8 +491,9 @@ public abstract class Cab<E, M> extends CabPad4 {
                         throw new InterruptedException();
                     }
 
-                    messageCache = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
-                    if (messageCache != null) {
+                    msg = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
+                    if (msg != null) {
+                        messageCache = msg;
                         return MESSAGE_RECEIVED_SEQUENCE;
                     }
                 }
@@ -527,13 +532,17 @@ public abstract class Cab<E, M> extends CabPad4 {
                             final Object m = mutex;
 
                             synchronized (m) {
-                                while (UNSAFE.getIntVolatile(states, address) == 0) {
+                                while (true) {
+                                    if (UNSAFE.getIntVolatile(states, address) == 0) {
 
-                                    m.wait();
-
-                                    messageCache = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
-                                    if (messageCache != null) {
-                                        return MESSAGE_RECEIVED_SEQUENCE;
+                                        msg = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
+                                        if (msg != null) {
+                                            messageCache = msg;
+                                            return MESSAGE_RECEIVED_SEQUENCE;
+                                        }
+                                        m.wait();
+                                    } else {
+                                        break;
                                     }
                                 }
                                 break _endOfWaiting;
@@ -542,12 +551,15 @@ public abstract class Cab<E, M> extends CabPad4 {
                             throw new IllegalStateException();
                     }
 
+                    // we are here while spinning and yielding
+
                     if (Thread.interrupted()) {
                         throw new InterruptedException();
                     }
 
-                    messageCache = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
-                    if (messageCache != null) {
+                    msg = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
+                    if (msg != null) {
+                        messageCache = msg;
                         return MESSAGE_RECEIVED_SEQUENCE;
                     }
                 }
@@ -555,26 +567,24 @@ public abstract class Cab<E, M> extends CabPad4 {
             }
 
             case BLOCKING: {
-                if (UNSAFE.getIntVolatile(states, address) == 0) {
-                    messageCache = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
-                    if (messageCache != null) {
-                        return MESSAGE_RECEIVED_SEQUENCE;
-                    }
+                final Object m = mutex;
 
-                    final Object m = mutex;
+                synchronized (m) {
+                    while (true) {
+                        if (UNSAFE.getIntVolatile(states, address) == 0) {
 
-                    synchronized (m) {
-                        while (UNSAFE.getIntVolatile(states, address) == 0) {
-
-                            m.wait();
-
-                            messageCache = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
-                            if (messageCache != null) {
+                            msg = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
+                            if (msg != null) {
+                                messageCache = msg;
                                 return MESSAGE_RECEIVED_SEQUENCE;
                             }
+                            m.wait();
+                        } else {
+                            break;
                         }
                     }
                 }
+
                 break;
             }
 
