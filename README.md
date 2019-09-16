@@ -71,7 +71,7 @@ A consumer:
 
     }
 
-      cab.consumerCommit(sequence);
+    cab.consumerCommit(sequence);
 ```
 
 ## License
