@@ -275,9 +275,9 @@ public abstract class Cab<E, M> extends CabPad4 {
             this, UNCOMMITTED_PRODUCERS_SEQUENCE_OFFSET, 1L) + 1L; // fetch-and-add
 
         while (true) {
-            final long cs = UNSAFE.getLongVolatile(this, CONSUMER_SEQUENCE_OFFSET);
+            final long consumerSequence = UNSAFE.getLongVolatile(this, CONSUMER_SEQUENCE_OFFSET);
 
-            if (nextSequence - cs <= bufferSize) { // there is some free space in the buffer
+            if (nextSequence - consumerSequence <= bufferSize) { // there is some free space in the buffer
                 break;
             }
 
@@ -298,9 +298,9 @@ public abstract class Cab<E, M> extends CabPad4 {
      * @param sequence to be committed
      */
     public void producerCommit(final long sequence) {
-        final long address = stateAddress(sequence);
+        final long stateAddress = stateAddress(sequence);
 
-        UNSAFE.putOrderedInt(entryStates, address, 1);
+        UNSAFE.putOrderedInt(entryStates, stateAddress, 1);
 
         switch (waitingStaregy) {
             case BUSY_SPINNING:
@@ -309,10 +309,10 @@ public abstract class Cab<E, M> extends CabPad4 {
 
             case BACKING_OFF:
             case BLOCKING:
-                final Object m = mutex;
+                final Object mtx = mutex;
 
-                synchronized (m) {
-                    m.notifyAll();
+                synchronized (mtx) {
+                    mtx.notifyAll();
                 }
                 break;
 
@@ -358,7 +358,7 @@ public abstract class Cab<E, M> extends CabPad4 {
                 long spins = 0;
                 long yields = 0;
 
-                final Object m = mutex;
+                final Object mtx = mutex;
 
                 _endOfWaiting:
                 while (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
@@ -384,11 +384,10 @@ public abstract class Cab<E, M> extends CabPad4 {
                             break;
 
                         case 3: // wait with the mutex
-                            synchronized (m) {
+                            synchronized (mtx) {
                                 while (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
 
-                                    m.wait();
-
+                                    mtx.wait();
                                 }
                                 break _endOfWaiting;
                             }
@@ -401,28 +400,27 @@ public abstract class Cab<E, M> extends CabPad4 {
                     }
                 }
 
-                synchronized (m) {
-                    m.notifyAll();
+                synchronized (mtx) {
+                    mtx.notifyAll();
                 }
 
                 break;
             }
 
             case BLOCKING: {
-                final Object m = mutex;
+                final Object mtx = mutex;
 
                 if (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
-                    synchronized (m) {
+                    synchronized (mtx) {
                         while (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
 
-                            m.wait();
-
+                            mtx.wait();
                         }
                     }
                 }
 
-                synchronized (m) {
-                    m.notifyAll();
+                synchronized (mtx) {
+                    mtx.notifyAll();
                 }
 
                 break;
@@ -454,18 +452,18 @@ public abstract class Cab<E, M> extends CabPad4 {
         }
 
         // continue with the buffer and the message again
-        long cs = UNSAFE.getLong(this, CONSUMER_SEQUENCE_OFFSET); // this thread owns the value,
+        long consumerSequence = UNSAFE.getLong(this, CONSUMER_SEQUENCE_OFFSET); // this thread owns the value,
         // so, no any membars required to read
 
-        cs++;
+        consumerSequence++;
 
-        final long address = stateAddress(cs);
+        final long stateAddress = stateAddress(consumerSequence);
 
         final int[] states = entryStates;
 
         switch (waitingStaregy) {
             case BUSY_SPINNING: {
-                while (UNSAFE.getIntVolatile(states, address) == 0) {
+                while (UNSAFE.getIntVolatile(states, stateAddress) == 0) {
 
                     Utils.onSpinWait();
 
@@ -483,7 +481,7 @@ public abstract class Cab<E, M> extends CabPad4 {
             }
 
             case YIELDING: {
-                while (UNSAFE.getIntVolatile(states, address) == 0) {
+                while (UNSAFE.getIntVolatile(states, stateAddress) == 0) {
 
                     Thread.yield();
 
@@ -505,8 +503,8 @@ public abstract class Cab<E, M> extends CabPad4 {
                 long spins = 0;
                 long yields = 0;
 
-                _endOfWaiting:
-                while (UNSAFE.getIntVolatile(states, address) == 0) {
+                _endOfBackingOff:
+                while (UNSAFE.getIntVolatile(states, stateAddress) == 0) {
                     switch (state) {
                         case 0: // initial state
                             state = 1;
@@ -529,24 +527,26 @@ public abstract class Cab<E, M> extends CabPad4 {
                             break;
 
                         case 3: // wait with the mutex
-                            final Object m = mutex;
+                            final Object mtx = mutex;
 
-                            synchronized (m) {
+                            synchronized (mtx) {
                                 while (true) {
-                                    if (UNSAFE.getIntVolatile(states, address) == 0) {
+                                    if (UNSAFE.getIntVolatile(states, stateAddress) == 0) {
 
                                         msg = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
                                         if (msg != null) {
                                             messageCache = msg;
                                             return MESSAGE_RECEIVED_SEQUENCE;
                                         }
-                                        m.wait();
-                                    } else {
-                                        break;
+
+                                        mtx.wait();
+                                        continue;
                                     }
+                                    break;
                                 }
-                                break _endOfWaiting;
                             }
+                            break _endOfBackingOff;
+
                         default:
                             throw new IllegalStateException();
                     }
@@ -567,24 +567,24 @@ public abstract class Cab<E, M> extends CabPad4 {
             }
 
             case BLOCKING: {
-                final Object m = mutex;
+                final Object mtx = mutex;
 
-                synchronized (m) {
+                synchronized (mtx) {
                     while (true) {
-                        if (UNSAFE.getIntVolatile(states, address) == 0) {
+                        if (UNSAFE.getIntVolatile(states, stateAddress) == 0) {
 
                             msg = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
                             if (msg != null) {
                                 messageCache = msg;
                                 return MESSAGE_RECEIVED_SEQUENCE;
                             }
-                            m.wait();
-                        } else {
-                            break;
+
+                            mtx.wait();
+                            continue;
                         }
+                        break;
                     }
                 }
-
                 break;
             }
 
@@ -592,7 +592,7 @@ public abstract class Cab<E, M> extends CabPad4 {
                 throw new IllegalStateException();
         }
 
-        return cs;
+        return consumerSequence;
     }
 
     /**
@@ -612,10 +612,10 @@ public abstract class Cab<E, M> extends CabPad4 {
 
                 case BACKING_OFF:
                 case BLOCKING:
-                    final Object m = mutex;
+                    final Object mtx = mutex;
 
-                    synchronized (m) {
-                        m.notifyAll();
+                    synchronized (mtx) {
+                        mtx.notifyAll();
                     }
                     break;
 
@@ -625,8 +625,8 @@ public abstract class Cab<E, M> extends CabPad4 {
             return;
         }
 
-        final long address = stateAddress(sequence);
-        UNSAFE.putOrderedInt(entryStates, address, 0);
+        final long stateAddress = stateAddress(sequence);
+        UNSAFE.putOrderedInt(entryStates, stateAddress, 0);
 
         UNSAFE.putOrderedLong(this, CONSUMER_SEQUENCE_OFFSET, sequence);
     }
@@ -650,9 +650,9 @@ public abstract class Cab<E, M> extends CabPad4 {
      */
     @SuppressWarnings("unchecked")
     public E removeEntry(final long sequence) {
-        final int address = (int) entryAddress(sequence);
+        final int entryAddress = (int) entryAddress(sequence);
         final E result = (E) UNSAFE.getObjectVolatile(entries, entryAddress(sequence));
-        UNSAFE.putObjectVolatile(entries, address, null);
+        UNSAFE.putObjectVolatile(entries, entryAddress, null);
         return result;
     }
 
@@ -663,8 +663,8 @@ public abstract class Cab<E, M> extends CabPad4 {
      * @param entry    to be set
      */
     public void setEntry(final long sequence, final E entry) {
-        final int address = (int) entryAddress(sequence);
-        UNSAFE.putObjectVolatile(entries, address, entry);
+        final int entryAddress = (int) entryAddress(sequence);
+        UNSAFE.putObjectVolatile(entries, entryAddress, entry);
     }
 
     /**
