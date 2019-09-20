@@ -145,6 +145,12 @@ public abstract class Cab<E, M> extends CabPad4 {
     public static final long MESSAGE_RECEIVED_SEQUENCE = Long.MAX_VALUE;
 
     private static final long INITIAL_SEQUENCE = -1;
+
+    private static final int BACKING_OFF_INITIAL_STATE = 0;
+    private static final int BACKING_OFF_SPINNING_STATE = 1;
+    private static final int BACKING_OFF_YIELDING_STATE = 2;
+    private static final int BACKING_OFF_WAIT_ON_MUTEX_STATE = 3;
+
     private static final String UNEXPECTED_OBJECT_ELEMENT_SIZE_MESSAGE = "Unexpected Object[] element size";
     private static final String UNEXPECTED_INT_ELEMENT_SIZE_MESSAGE = "Unexpected int[] element size";
     private static final String BUFFER_SIZE_MUST_NOT_BE_LESS_THAN_1_MESSAGE = "bufferSize must not be less than 1";
@@ -190,14 +196,14 @@ public abstract class Cab<E, M> extends CabPad4 {
         try {
             CONSUMER_SEQUENCE_OFFSET = UNSAFE.objectFieldOffset(
                     ConsumerSequence.class.getDeclaredField("consumerSequence"));
-        } catch (final Exception ex) {
-            throw new Error(ex);
+        } catch (final Exception e) {
+            throw new Error(e);
         }
         try {
             UNCOMMITTED_PRODUCERS_SEQUENCE_OFFSET = UNSAFE.objectFieldOffset(
                     UncommittedProducersSequence.class.getDeclaredField("uncommittedProducersSequence"));
-        } catch (final Exception ex) {
-            throw new Error(ex);
+        } catch (final Exception e) {
+            throw new Error(e);
         }
         try {
             MESSAGE_OFFSET = UNSAFE.objectFieldOffset(
@@ -354,7 +360,7 @@ public abstract class Cab<E, M> extends CabPad4 {
             }
 
             case BACKING_OFF: {
-                int state = 0;
+                int state = BACKING_OFF_INITIAL_STATE;
                 long spins = 0;
                 long yields = 0;
 
@@ -363,27 +369,27 @@ public abstract class Cab<E, M> extends CabPad4 {
                 _endOfWaiting:
                 while (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
                     switch (state) {
-                        case 0: // initial state
-                            state = 1;
+                        case BACKING_OFF_INITIAL_STATE:
+                            state = BACKING_OFF_SPINNING_STATE;
                             spins++;
                             break;
 
-                        case 1: // spinning
+                        case BACKING_OFF_SPINNING_STATE:
                             Utils.onSpinWait();
                             if (++spins > maxSpins) {
-                                state = 2;
+                                state = BACKING_OFF_YIELDING_STATE;
                             }
                             break;
 
-                        case 2: // yielding
+                        case BACKING_OFF_YIELDING_STATE:
                             if (++yields > maxYields) {
-                                state = 3;
+                                state = BACKING_OFF_WAIT_ON_MUTEX_STATE;
                             } else {
                                 Thread.yield();
                             }
                             break;
 
-                        case 3: // wait with the mutex
+                        case BACKING_OFF_WAIT_ON_MUTEX_STATE:
                             synchronized (mtx) {
                                 while (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
 
@@ -403,7 +409,6 @@ public abstract class Cab<E, M> extends CabPad4 {
                 synchronized (mtx) {
                     mtx.notifyAll();
                 }
-
                 break;
             }
 
@@ -422,7 +427,6 @@ public abstract class Cab<E, M> extends CabPad4 {
                 synchronized (mtx) {
                     mtx.notifyAll();
                 }
-
                 break;
             }
 
@@ -499,34 +503,34 @@ public abstract class Cab<E, M> extends CabPad4 {
             }
 
             case BACKING_OFF: {
-                int state = 0;
+                int state = BACKING_OFF_INITIAL_STATE;
                 long spins = 0;
                 long yields = 0;
 
                 _endOfBackingOff:
                 while (UNSAFE.getIntVolatile(states, stateAddress) == 0) {
                     switch (state) {
-                        case 0: // initial state
-                            state = 1;
+                        case BACKING_OFF_INITIAL_STATE:
+                            state = BACKING_OFF_SPINNING_STATE;
                             spins++;
                             break;
 
-                        case 1: // spinning
+                        case BACKING_OFF_SPINNING_STATE:
                             Utils.onSpinWait();
                             if (++spins > maxSpins) {
-                                state = 2;
+                                state = BACKING_OFF_YIELDING_STATE;
                             }
                             break;
 
-                        case 2: // yielding
+                        case BACKING_OFF_YIELDING_STATE:
                             if (++yields > maxYields) {
-                                state = 3;
+                                state = BACKING_OFF_WAIT_ON_MUTEX_STATE;
                             } else {
                                 Thread.yield();
                             }
                             break;
 
-                        case 3: // wait with the mutex
+                        case BACKING_OFF_WAIT_ON_MUTEX_STATE:
                             final Object mtx = mutex;
 
                             synchronized (mtx) {
@@ -540,6 +544,7 @@ public abstract class Cab<E, M> extends CabPad4 {
                                         }
 
                                         mtx.wait();
+
                                         continue;
                                     }
                                     break;
@@ -580,6 +585,7 @@ public abstract class Cab<E, M> extends CabPad4 {
                             }
 
                             mtx.wait();
+
                             continue;
                         }
                         break;
