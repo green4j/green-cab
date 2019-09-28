@@ -264,7 +264,7 @@ public class CabPlayground {
                     }
                     cab.consumerCommit(sequence);
                 }
-            } catch (final ConsumerInterruptedException | InterruptedException e) {
+            } catch (final InterruptedException e) {
                 // ignore
             }
 

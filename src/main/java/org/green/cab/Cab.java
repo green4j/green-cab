@@ -118,8 +118,6 @@ abstract class CabPad4 extends MessageCache {
  *      long sequence;
  *      try {
  *          sequence = cab.consumerNext();
- *      } catch (ConsumerInterruptedException e) {
- *          // happens if the consumer was interrupted by consumerInterrupt()
  *      } catch (InterruptedException e) {
  *          // happens if the current thread was interrupted
  *      }
@@ -486,15 +484,14 @@ public abstract class Cab<E, M> extends CabPad4 {
      * with getMessage(), otherwise new entry can be accessed with getEntry(sequence).
      * <p>
      * This method can be called from one single consumer thread only.
-     * @throws ConsumerInterruptedException if the consumer was interrupted already
      * @throws InterruptedException if the current thread was interrupted
      */
-    public long consumerNext() throws ConsumerInterruptedException, InterruptedException {
+    public long consumerNext() throws InterruptedException {
         long consumerSequence = UNSAFE.getLong(this, CONSUMER_SEQUENCE_OFFSET); // this thread owns the value,
         // so, no any membars required to read
 
-        if (consumerSequence == CONSUMER_INTERRUPTED_SEQUENCE) {
-            throw new ConsumerInterruptedException();
+        if (consumerSequence == CONSUMER_INTERRUPTED_SEQUENCE) { // really?
+            throw new RuntimeException("consumerInterrupt() was closed", new ConsumerInterruptedException());
         }
 
         // check the message first
