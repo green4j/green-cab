@@ -186,7 +186,7 @@ public class CabPlayground {
 
                     entryToProduce.set(null);
                 }
-            } catch (final InterruptedException e) {
+            } catch (final ConsumerInterruptedException | InterruptedException e) {
                 // ignore
             }
 
@@ -228,7 +228,7 @@ public class CabPlayground {
 
                     messageToSend.set(null);
                 }
-            } catch (final InterruptedException e) {
+            } catch (final ConsumerInterruptedException | InterruptedException e) {
                 // ignore
             }
 
@@ -264,7 +264,7 @@ public class CabPlayground {
                     }
                     cab.consumerCommit(sequence);
                 }
-            } catch (final InterruptedException e) {
+            } catch (final ConsumerInterruptedException | InterruptedException e) {
                 // ignore
             }
 

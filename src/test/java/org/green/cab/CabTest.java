@@ -23,6 +23,7 @@
  */
 package org.green.cab;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.concurrent.locks.LockSupport;
@@ -68,6 +69,38 @@ public class CabTest {
         assertEquals(index, entry);
 
         assertNull(cab.getEntry(index));
+    }
+
+    @Test
+    public void testConsumerInterrupted() {
+        final Cab<Long, Object> cab = new CabBusySpinning<>(BUFFER_SIZE);
+
+        cab.consumerInterrupt();
+
+        int ceExceptionCount = 0;
+
+        try {
+            cab.consumerNext();
+        } catch (ConsumerInterruptedException e) {
+            ceExceptionCount++;
+        } catch (InterruptedException e) {
+        }
+
+        try {
+            cab.producerNext();
+        } catch (ConsumerInterruptedException e) {
+            ceExceptionCount++;
+        } catch (InterruptedException e) {
+        }
+
+        try {
+            cab.send(null);
+        } catch (ConsumerInterruptedException e) {
+            ceExceptionCount++;
+        } catch (InterruptedException e) {
+        }
+
+        assertEquals(3, ceExceptionCount);
     }
 
     @Test(timeout = 3000)
@@ -202,7 +235,7 @@ public class CabTest {
                         cab.send(new Message(id, messageCount++));
                     }
                 }
-            } catch (final InterruptedException e) {
+            } catch (final ConsumerInterruptedException | InterruptedException e) {
                 e.printStackTrace(System.err);
             }
         }
@@ -360,7 +393,7 @@ public class CabTest {
                         LockSupport.parkNanos(1);
                     }
                 }
-            } catch (final InterruptedException e) {
+            } catch (final ConsumerInterruptedException | InterruptedException e) {
                 e.printStackTrace(System.err);
             }
         }

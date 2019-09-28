@@ -74,8 +74,7 @@ abstract class CabPad4 extends MessageCache {
  * the Ring Buffer, some controlling threads send their commands as messages to the Channel and ONLY ONE single
  * worker thread (the consumer) consumes all incoming data entries and messages and processes them one by one.
  * This makes the flow of entries and messages linearized.
- * Such technique may be very useful, for example, when a processing algorithm is going to be implemented
- * as a Finite State Machine (FSM).
+ * Such technique may be very useful, for example, to make an event loop.
  * <p>
  * For example:
  * <p>
@@ -86,6 +85,8 @@ abstract class CabPad4 extends MessageCache {
  *      long sequence;
  *      try {
  *          sequence = cab.producerNext();
+ *      } catch (ConsumerInterruptedException e) {
+ *          // happens if the consumer was interrupted by consumerInterrupt() and cannot process incoming entries
  *      } catch (InterruptedException e) {
  *          // happens if the current thread was interrupted
  *      }
@@ -102,7 +103,9 @@ abstract class CabPad4 extends MessageCache {
  *      Cab cab = ...
  *
  *      try {
- *          cab.send(message);
+ *          cab.send(message);,
+ *      } catch (ConsumerInterruptedException e) {
+ *          // happens if the consumer was interrupted by consumerInterrupt() and cannot process incoming messages
  *      } catch (InterruptedException e) {
  *          // happens if the current thread was interrupted
  *      }
@@ -115,6 +118,8 @@ abstract class CabPad4 extends MessageCache {
  *      long sequence;
  *      try {
  *          sequence = cab.consumerNext();
+ *      } catch (ConsumerInterruptedException e) {
+ *          // happens if the consumer was interrupted by consumerInterrupt()
  *      } catch (InterruptedException e) {
  *          // happens if the current thread was interrupted
  *      }
@@ -143,6 +148,8 @@ public abstract class Cab<E, M> extends CabPad4 {
     }
 
     public static final long MESSAGE_RECEIVED_SEQUENCE = Long.MAX_VALUE;
+
+    public static final long CONSUMER_INTERRUPTED_SEQUENCE = Long.MIN_VALUE;
 
     private static final long INITIAL_SEQUENCE = -1;
 
@@ -274,14 +281,19 @@ public abstract class Cab<E, M> extends CabPad4 {
      * setEntry(sequence) or removeEntry(sequence).
      *
      * @return sequence to address available entry
+     * @throws ConsumerInterruptedException if the consumer was interrupted
      * @throws InterruptedException if the current thread was interrupted
      */
-    public long producerNext() throws InterruptedException {
+    public long producerNext() throws ConsumerInterruptedException, InterruptedException {
         final long nextSequence = UNSAFE.getAndAddLong(
             this, UNCOMMITTED_PRODUCERS_SEQUENCE_OFFSET, 1L) + 1L; // fetch-and-add
 
         while (true) {
             final long consumerSequence = UNSAFE.getLongVolatile(this, CONSUMER_SEQUENCE_OFFSET);
+
+            if (consumerSequence == CONSUMER_INTERRUPTED_SEQUENCE) {
+                throw new ConsumerInterruptedException();
+            }
 
             if (nextSequence - consumerSequence <= bufferSize) { // there is some free space in the buffer
                 break;
@@ -331,14 +343,25 @@ public abstract class Cab<E, M> extends CabPad4 {
      * Sends a message to the Channel.
      *
      * @param msg a message to be sent
+     * @throws ConsumerInterruptedException if the consumer was interrupted
      * @throws InterruptedException if the current thread was interrupted
      */
-    public void send(final M msg) throws InterruptedException {
+    public void send(final M msg) throws ConsumerInterruptedException, InterruptedException {
+        long consumerSequence = UNSAFE.getLongVolatile(this, CONSUMER_SEQUENCE_OFFSET);
+        if (consumerSequence == CONSUMER_INTERRUPTED_SEQUENCE) {
+            throw new ConsumerInterruptedException();
+        }
+
         switch (waitingStaregy) {
             case BUSY_SPINNING: {
                 while (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
 
                     Utils.onSpinWait();
+
+                    consumerSequence = UNSAFE.getLongVolatile(this, CONSUMER_SEQUENCE_OFFSET);
+                    if (consumerSequence == CONSUMER_INTERRUPTED_SEQUENCE) {
+                        throw new ConsumerInterruptedException();
+                    }
 
                     if (Thread.interrupted()) {
                         throw new InterruptedException();
@@ -351,6 +374,11 @@ public abstract class Cab<E, M> extends CabPad4 {
                 while (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
 
                     Thread.yield();
+
+                    consumerSequence = UNSAFE.getLongVolatile(this, CONSUMER_SEQUENCE_OFFSET);
+                    if (consumerSequence == CONSUMER_INTERRUPTED_SEQUENCE) {
+                        throw new ConsumerInterruptedException();
+                    }
 
                     if (Thread.interrupted()) {
                         throw new InterruptedException();
@@ -394,11 +422,21 @@ public abstract class Cab<E, M> extends CabPad4 {
                                 while (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
 
                                     mtx.wait();
+
+                                    consumerSequence = UNSAFE.getLongVolatile(this, CONSUMER_SEQUENCE_OFFSET);
+                                    if (consumerSequence == CONSUMER_INTERRUPTED_SEQUENCE) {
+                                        throw new ConsumerInterruptedException();
+                                    }
                                 }
                                 break _endOfWaiting;
                             }
                         default:
                             throw new IllegalStateException();
+                    }
+
+                    consumerSequence = UNSAFE.getLongVolatile(this, CONSUMER_SEQUENCE_OFFSET);
+                    if (consumerSequence == CONSUMER_INTERRUPTED_SEQUENCE) {
+                        throw new ConsumerInterruptedException();
                     }
 
                     if (Thread.interrupted()) {
@@ -420,6 +458,11 @@ public abstract class Cab<E, M> extends CabPad4 {
                         while (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
 
                             mtx.wait();
+
+                            consumerSequence = UNSAFE.getLongVolatile(this, CONSUMER_SEQUENCE_OFFSET);
+                            if (consumerSequence == CONSUMER_INTERRUPTED_SEQUENCE) {
+                                throw new ConsumerInterruptedException();
+                            }
                         }
                     }
                 }
@@ -443,9 +486,17 @@ public abstract class Cab<E, M> extends CabPad4 {
      * with getMessage(), otherwise new entry can be accessed with getEntry(sequence).
      * <p>
      * This method can be called from one single consumer thread only.
+     * @throws ConsumerInterruptedException if the consumer was interrupted already
      * @throws InterruptedException if the current thread was interrupted
      */
-    public long consumerNext() throws InterruptedException {
+    public long consumerNext() throws ConsumerInterruptedException, InterruptedException {
+        long consumerSequence = UNSAFE.getLong(this, CONSUMER_SEQUENCE_OFFSET); // this thread owns the value,
+        // so, no any membars required to read
+
+        if (consumerSequence == CONSUMER_INTERRUPTED_SEQUENCE) {
+            throw new ConsumerInterruptedException();
+        }
+
         // check the message first
         Object msg;
 
@@ -456,9 +507,6 @@ public abstract class Cab<E, M> extends CabPad4 {
         }
 
         // continue with the buffer and the message again
-        long consumerSequence = UNSAFE.getLong(this, CONSUMER_SEQUENCE_OFFSET); // this thread owns the value,
-        // so, no any membars required to read
-
         consumerSequence++;
 
         final long stateAddress = stateAddress(consumerSequence);
@@ -635,6 +683,14 @@ public abstract class Cab<E, M> extends CabPad4 {
         UNSAFE.putOrderedInt(entryStates, stateAddress, 0);
 
         UNSAFE.putOrderedLong(this, CONSUMER_SEQUENCE_OFFSET, sequence);
+    }
+
+    /**
+     * Interrupts the consumer. Entry producers and message senders will get an {@link ConsumerInterruptedException}
+     * after this call.
+     */
+    public void consumerInterrupt() {
+        UNSAFE.putLongVolatile(this, CONSUMER_SEQUENCE_OFFSET, CONSUMER_INTERRUPTED_SEQUENCE);
     }
 
     /**
