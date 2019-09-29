@@ -13,7 +13,7 @@ Just run `gradlew` to build the library. But prefer to just drop the code into y
 The pattern of usage is the following: a number of data producing threads put their data entries into the Ring Buffer, some
 controlling threads send their commands as messages to the Channel and ONLY ONE single worker thread (the consumer) consumes
 all incoming data entries and messages and processes them one by one. This makes the flow of entries and messages linearized.
-Such technique may be very useful, for example, when a processing algorithm is going to be implemented as a Finite State Machine (FSM).
+Such technique may be very useful, for example, to implement an event loop in a thread of the consumer.
 
 For example:
 

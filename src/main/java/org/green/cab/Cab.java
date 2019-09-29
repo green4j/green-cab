@@ -74,7 +74,7 @@ abstract class CabPad4 extends MessageCache {
  * the Ring Buffer, some controlling threads send their commands as messages to the Channel and ONLY ONE single
  * worker thread (the consumer) consumes all incoming data entries and messages and processes them one by one.
  * This makes the flow of entries and messages linearized.
- * Such technique may be very useful, for example, to make an event loop.
+ * Such technique may be very useful, for example, to implement an event loop in a thread of the consumer.
  * <p>
  * For example:
  * <p>
