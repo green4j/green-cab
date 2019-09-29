@@ -156,9 +156,10 @@ public abstract class Cab<E, M> extends CabPad4 {
     private static final int BACKING_OFF_YIELDING_STATE = 2;
     private static final int BACKING_OFF_WAIT_ON_MUTEX_STATE = 3;
 
-    private static final String UNEXPECTED_OBJECT_ELEMENT_SIZE_MESSAGE = "Unexpected Object[] element size";
-    private static final String UNEXPECTED_INT_ELEMENT_SIZE_MESSAGE = "Unexpected int[] element size";
     private static final String BUFFER_SIZE_MUST_NOT_BE_LESS_THAN_1_MESSAGE = "bufferSize must not be less than 1";
+    private static final String CONSUMER_WAS_CLOSED_MESSAGE = "Consumer was closed";
+    private static final String UNEXPECTED_INT_ELEMENT_SIZE_MESSAGE = "Unexpected int[] element size";
+    private static final String UNEXPECTED_OBJECT_ELEMENT_SIZE_MESSAGE = "Unexpected Object[] element size";
 
     private static final Unsafe UNSAFE = Utils.getUnsafe();
 
@@ -490,8 +491,8 @@ public abstract class Cab<E, M> extends CabPad4 {
         long consumerSequence = UNSAFE.getLong(this, CONSUMER_SEQUENCE_OFFSET); // this thread owns the value,
         // so, no any membars required to read
 
-        if (consumerSequence == CONSUMER_INTERRUPTED_SEQUENCE) { // really?
-            throw new RuntimeException("consumerInterrupt() was closed", new ConsumerInterruptedException());
+        if (consumerSequence == CONSUMER_INTERRUPTED_SEQUENCE) {
+            throw new IllegalStateException(CONSUMER_WAS_CLOSED_MESSAGE, new ConsumerInterruptedException());
         }
 
         // check the message first
