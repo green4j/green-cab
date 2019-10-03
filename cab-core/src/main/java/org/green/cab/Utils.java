@@ -53,8 +53,7 @@ public class Utils {
         MethodHandle methodHandle = null;
         try {
             methodHandle = MethodHandles.lookup().findStatic(Thread.class, "onSpinWait", methodType(void.class));
-        } catch (final NoSuchMethodException | IllegalAccessException e) {
-            // ignore
+        } catch (final NoSuchMethodException | IllegalAccessException ignore) {
         }
 
         ON_SPIN_WAIT_METHOD_HANDLE = methodHandle;
@@ -70,8 +69,7 @@ public class Utils {
         }
         try {
             ON_SPIN_WAIT_METHOD_HANDLE.invokeExact();
-        } catch (final Throwable t) {
-            // ignore
+        } catch (final Throwable ignore) {
         }
     }
 

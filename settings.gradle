@@ -1,1 +1,4 @@
 rootProject.name=projectName
+
+include 'cab-core'
+include 'cab-jmh'

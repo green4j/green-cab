@@ -186,8 +186,7 @@ public class CabPlayground {
 
                     entryToProduce.set(null);
                 }
-            } catch (final ConsumerInterruptedException | InterruptedException e) {
-                // ignore
+            } catch (final ConsumerInterruptedException | InterruptedException ignore) {
             }
 
             System.out.println(getName() + " finished");
@@ -228,8 +227,7 @@ public class CabPlayground {
 
                     messageToSend.set(null);
                 }
-            } catch (final ConsumerInterruptedException | InterruptedException e) {
-                // ignore
+            } catch (final ConsumerInterruptedException | InterruptedException ignore) {
             }
 
             System.out.println(getName() + " finished");
@@ -264,8 +262,7 @@ public class CabPlayground {
                     }
                     cab.consumerCommit(sequence);
                 }
-            } catch (final InterruptedException e) {
-                // ignore
+            } catch (final InterruptedException ignore) {
             }
 
             System.out.println(getName() + " finished");
