@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'jacoco'
 }
 
 group = projectGroup
@@ -7,7 +8,7 @@ version = projectVersion
 sourceCompatibility = projectSourceCompatibility
 targetCompatibility = projectSourceCompatibility
 
-subprojects {
+allprojects {
     apply plugin: 'java'
     apply plugin: 'checkstyle'
 
@@ -23,6 +24,42 @@ subprojects {
         toolVersion = '8.12'
     }
 }
+
+dependencies {
+    testCompile 'junit:junit:4.12'
+}
+
+test {
+    testLogging {
+        showStandardStreams = true
+        exceptionFormat = 'full'
+    }
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': projectName,
+                   'Implementation-Version': projectVersion,
+                   'Implementation-Vendor' : projectAuthor
+    }
+}
+
+javadoc {
+    title = "<h1>$projectName</h1>"
+    options.bottom = "<i>Copyright &#169; 2019 $projectAuthor.</i>"
+    if (JavaVersion.current() == JavaVersion.VERSION_1_10) {
+        options.addBooleanOption 'html5', true
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled true
+    }
+}
+
+check.dependsOn jacocoTestReport
 
 wrapper {
     gradleVersion = '4.10.2'

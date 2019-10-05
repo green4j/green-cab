@@ -1,2 +1,0 @@
-# green-cproc JMH tests
-
