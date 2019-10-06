@@ -709,8 +709,8 @@ public abstract class Cab<E, M> extends CabPad4 {
      */
     @SuppressWarnings("unchecked")
     public E removeEntry(final long sequence) {
-        final int entryAddress = (int) entryAddress(sequence);
-        final E result = (E) UNSAFE.getObjectVolatile(entries, entryAddress(sequence));
+        final long entryAddress = entryAddress(sequence);
+        final E result = (E) UNSAFE.getObjectVolatile(entries, entryAddress);
         UNSAFE.putObjectVolatile(entries, entryAddress, null);
         return result;
     }
@@ -722,7 +722,7 @@ public abstract class Cab<E, M> extends CabPad4 {
      * @param entry    to be set
      */
     public void setEntry(final long sequence, final E entry) {
-        final int entryAddress = (int) entryAddress(sequence);
+        final long entryAddress = entryAddress(sequence);
         UNSAFE.putObjectVolatile(entries, entryAddress, entry);
     }
 
