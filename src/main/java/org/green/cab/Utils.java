@@ -34,6 +34,7 @@ import java.security.PrivilegedExceptionAction;
 import static java.lang.invoke.MethodType.methodType;
 
 public class Utils {
+    public static final int CACHE_LINE_SIZE = 64;
 
     private static final sun.misc.Unsafe UNSAFE;
     private static final MethodHandle ON_SPIN_WAIT_METHOD_HANDLE; // for Java 9 and above

@@ -28,6 +28,7 @@ import sun.misc.Unsafe;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.Supplier;
 
+import static org.green.cab.Utils.CACHE_LINE_SIZE;
 import static org.green.cab.Utils.nextPowerOfTwo;
 
 abstract class CabPad0 {
@@ -162,8 +163,6 @@ public abstract class Cab<E, M> extends CabPad4 {
     private static final String UNEXPECTED_OBJECT_ELEMENT_SIZE_MESSAGE = "Unexpected Object[] element size";
 
     private static final Unsafe UNSAFE = Utils.getUnsafe();
-
-    private static final int CACHE_LINE_SIZE = 64;
 
     private static final int ENTRY_ARRAY_ELEMENT_SHIFT;
     private static final int ENTRY_ARRAY_PAD;
