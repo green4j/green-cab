@@ -31,8 +31,8 @@ public class CabYielding<E, M> extends Cab<E, M> {
     }
 
     public CabYielding(
-        final int bufferSize,
-        final Supplier<E> supplier) {
+            final int bufferSize,
+            final Supplier<E> supplier) {
 
         super(bufferSize, WaitingStaregy.YIELDING, 0, 0, supplier);
     }

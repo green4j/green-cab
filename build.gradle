@@ -20,11 +20,11 @@ allprojects {
     }
 
     dependencies {
-        checkstyle 'com.puppycrawl.tools:checkstyle:8.12'
+        checkstyle 'com.puppycrawl.tools:checkstyle:8.25'
     }
 
     checkstyle {
-        toolVersion = '8.12'
+        toolVersion = '8.25'
     }
 }
 

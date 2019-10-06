@@ -20,8 +20,8 @@ public class EntryProducerBenchmark extends CabBenchmark {
     @Benchmark
     @Threads(1)
     public void oneEntryProducerWithCabBlocking(
-        final CabBlockingSetup cabSetup, final Blackhole blackhole)
-        throws ConsumerInterruptedException, InterruptedException {
+            final CabBlockingSetup cabSetup, final Blackhole blackhole)
+            throws ConsumerInterruptedException, InterruptedException {
 
         final Cab cab = cabSetup.cab;
 
@@ -33,8 +33,8 @@ public class EntryProducerBenchmark extends CabBenchmark {
     @Benchmark
     @Threads(2)
     public void twoEntryProducersWithCabBlocking(
-        final CabBlockingSetup cabSetup, final Blackhole blackhole)
-        throws ConsumerInterruptedException, InterruptedException {
+            final CabBlockingSetup cabSetup, final Blackhole blackhole)
+            throws ConsumerInterruptedException, InterruptedException {
 
         final Cab cab = cabSetup.cab;
 
@@ -46,8 +46,8 @@ public class EntryProducerBenchmark extends CabBenchmark {
     @Benchmark
     @Threads(1)
     public void oneEntryProducerWithCabBackingOff(
-        final CabBackingOffSetup cabSetup, final Blackhole blackhole)
-        throws ConsumerInterruptedException, InterruptedException {
+            final CabBackingOffSetup cabSetup, final Blackhole blackhole)
+            throws ConsumerInterruptedException, InterruptedException {
 
         final Cab cab = cabSetup.cab;
 
@@ -59,8 +59,8 @@ public class EntryProducerBenchmark extends CabBenchmark {
     @Benchmark
     @Threads(2)
     public void twoEntryProducersWithCabBackingOff(
-        final CabBackingOffSetup cabSetup, final Blackhole blackhole)
-        throws ConsumerInterruptedException, InterruptedException {
+            final CabBackingOffSetup cabSetup, final Blackhole blackhole)
+            throws ConsumerInterruptedException, InterruptedException {
 
         final Cab cab = cabSetup.cab;
 
@@ -72,8 +72,8 @@ public class EntryProducerBenchmark extends CabBenchmark {
     @Benchmark
     @Threads(1)
     public void oneEntryProducerWithCabYielding(
-        final CabBackingOffSetup cabSetup, final Blackhole blackhole)
-        throws ConsumerInterruptedException, InterruptedException {
+            final CabBackingOffSetup cabSetup, final Blackhole blackhole)
+            throws ConsumerInterruptedException, InterruptedException {
 
         final Cab cab = cabSetup.cab;
 
@@ -85,8 +85,8 @@ public class EntryProducerBenchmark extends CabBenchmark {
     @Benchmark
     @Threads(2)
     public void twoEntryProducersWithCabYielding(
-        final CabYieldingSetup cabSetup, final Blackhole blackhole)
-        throws ConsumerInterruptedException, InterruptedException {
+            final CabYieldingSetup cabSetup, final Blackhole blackhole)
+            throws ConsumerInterruptedException, InterruptedException {
 
         final Cab cab = cabSetup.cab;
 

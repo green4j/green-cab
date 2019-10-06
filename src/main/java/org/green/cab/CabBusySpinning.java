@@ -31,8 +31,8 @@ public class CabBusySpinning<E, M> extends Cab<E, M> {
     }
 
     public CabBusySpinning(
-        final int bufferSize,
-        final Supplier<E> supplier) {
+            final int bufferSize,
+            final Supplier<E> supplier) {
 
         super(bufferSize, WaitingStaregy.BUSY_SPINNING, 0, 0, supplier);
     }

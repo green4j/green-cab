@@ -39,6 +39,7 @@ public class CabTest {
     public void testSupplier() {
         final Cab<Long, Object> cab = new CabBusySpinning<>(BUFFER_SIZE, new Supplier<Long>() {
             long value = -1;
+
             @Override
             public Long get() {
                 value++;
@@ -54,6 +55,7 @@ public class CabTest {
     public void testRemoveEntry() {
         final Cab<Long, Object> cab = new CabBusySpinning<>(BUFFER_SIZE, new Supplier<Long>() {
             long value = -1;
+
             @Override
             public Long get() {
                 value++;
@@ -143,18 +145,18 @@ public class CabTest {
     }
 
     private void testNpSc(
-        final Cab<Long, Message> cab,
-        final int numberOfProducersSenders,
-        final int numberOfEntriesForEach,
-        final boolean slowConsumer) throws InterruptedException {
+            final Cab<Long, Message> cab,
+            final int numberOfProducersSenders,
+            final int numberOfEntriesForEach,
+            final boolean slowConsumer) throws InterruptedException {
 
         final ProducerSenderSet psSet = new ProducerSenderSet(cab, numberOfProducersSenders, numberOfEntriesForEach);
         final Consumer cs = new Consumer(
-            cab,
-            psSet.size(),
-            psSet.getTotalNumberOfEntries(),
-            psSet.getTotalNumberOfMessages(),
-            slowConsumer);
+                cab,
+                psSet.size(),
+                psSet.getTotalNumberOfEntries(),
+                psSet.getTotalNumberOfMessages(),
+                slowConsumer);
 
         cs.start();
         psSet.start();
@@ -247,9 +249,9 @@ public class CabTest {
         private int totalNumbersOfMessages;
 
         ProducerSenderSet(
-            final Cab<Long, Message> cab,
-            final int numberOfProducers,
-            final int numberOfEntriesForEach) {
+                final Cab<Long, Message> cab,
+                final int numberOfProducers,
+                final int numberOfEntriesForEach) {
 
             this.set = new ProducerSender[numberOfProducers];
             for (int i = 0; i < set.length; i++) {
@@ -303,11 +305,11 @@ public class CabTest {
         private int numberOfMessages = 0;
 
         Consumer(
-            final Cab<Long, Message> cab,
-            final int numberOfSenders,
-            final int totalNumberOfEntries,
-            final int totalNumbersOfMessages,
-            final boolean isSlow) {
+                final Cab<Long, Message> cab,
+                final int numberOfSenders,
+                final int totalNumberOfEntries,
+                final int totalNumbersOfMessages,
+                final boolean isSlow) {
 
             super(Consumer.class.getName());
             this.cab = cab;

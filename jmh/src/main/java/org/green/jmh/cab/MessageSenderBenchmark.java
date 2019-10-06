@@ -19,8 +19,8 @@ public class MessageSenderBenchmark extends CabBenchmark {
     @Benchmark
     @Threads(1)
     public void oneMessageSenderWithCabBlocking(
-        final CabBlockingSetup cabSetup, final Blackhole blackhole)
-        throws ConsumerInterruptedException, InterruptedException {
+            final CabBlockingSetup cabSetup, final Blackhole blackhole)
+            throws ConsumerInterruptedException, InterruptedException {
 
         cabSetup.cab.send(this);
     }
@@ -28,8 +28,8 @@ public class MessageSenderBenchmark extends CabBenchmark {
     @Benchmark
     @Threads(2)
     public void twoMessageSendersWithCabBlocking(
-        final CabBlockingSetup cabSetup, final Blackhole blackhole)
-        throws ConsumerInterruptedException, InterruptedException {
+            final CabBlockingSetup cabSetup, final Blackhole blackhole)
+            throws ConsumerInterruptedException, InterruptedException {
 
         cabSetup.cab.send(this);
     }
@@ -37,8 +37,8 @@ public class MessageSenderBenchmark extends CabBenchmark {
     @Benchmark
     @Threads(1)
     public void oneMessageSenderWithCabBlockingOff(
-        final CabBackingOffSetup cabSetup, final Blackhole blackhole)
-        throws ConsumerInterruptedException, InterruptedException {
+            final CabBackingOffSetup cabSetup, final Blackhole blackhole)
+            throws ConsumerInterruptedException, InterruptedException {
 
         cabSetup.cab.send(this);
     }
@@ -46,8 +46,8 @@ public class MessageSenderBenchmark extends CabBenchmark {
     @Benchmark
     @Threads(2)
     public void twoMessageSendersWithCabBlockingOff(
-        final CabBackingOffSetup cabSetup, final Blackhole blackhole)
-        throws ConsumerInterruptedException, InterruptedException {
+            final CabBackingOffSetup cabSetup, final Blackhole blackhole)
+            throws ConsumerInterruptedException, InterruptedException {
 
         cabSetup.cab.send(this);
     }
@@ -55,8 +55,8 @@ public class MessageSenderBenchmark extends CabBenchmark {
     @Benchmark
     @Threads(1)
     public void oneMessageSenderWithCabYielding(
-        final CabYieldingSetup cabSetup, final Blackhole blackhole)
-        throws ConsumerInterruptedException, InterruptedException {
+            final CabYieldingSetup cabSetup, final Blackhole blackhole)
+            throws ConsumerInterruptedException, InterruptedException {
 
         cabSetup.cab.send(this);
     }
@@ -64,8 +64,8 @@ public class MessageSenderBenchmark extends CabBenchmark {
     @Benchmark
     @Threads(2)
     public void twoMessageSendersWithCabYielding(
-        final CabYieldingSetup cabSetup, final Blackhole blackhole)
-        throws ConsumerInterruptedException, InterruptedException {
+            final CabYieldingSetup cabSetup, final Blackhole blackhole)
+            throws ConsumerInterruptedException, InterruptedException {
 
         cabSetup.cab.send(this);
     }

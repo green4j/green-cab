@@ -110,8 +110,8 @@ public class CabPlayground {
                             break;
                         }
                         if (num >= producers.length) {
-                            System.out.println("Only " + producers.length + "(0-" + (producers.length - 1)
-                                + ") producers exist.");
+                            System.out.println("Only " + producers.length + "(0-" + (producers.length - 1) +
+                                    ") producers exist.");
                             break;
                         }
                         producers[num].produce(text);
@@ -122,8 +122,8 @@ public class CabPlayground {
                             break;
                         }
                         if (num >= senders.length) {
-                            System.out.println("Only " + senders.length + "(0-" + (senders.length - 1)
-                                + ") senders exist.");
+                            System.out.println("Only " + senders.length + "(0-" + (senders.length - 1) +
+                                    ") senders exist.");
                             break;
                         }
                         senders[num].send(text);
