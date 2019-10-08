@@ -23,17 +23,26 @@
  */
 package org.green.cab;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
-import java.util.concurrent.locks.LockSupport;
 import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 public class CabTest {
+    private static final boolean MAX_MODE = Boolean.getBoolean("org.green.cab.text.max_mode");
+
+    private static final int TEST_MULTIPLIER = MAX_MODE ? 20 : 1;
+
     private static final int BUFFER_SIZE = 10_000;
-    private static final int NUMBER_OF_ENTRIES_FOR_EACH_PRODUCER = 1_000_000;
+    private static final int NUMBER_OF_ENTRIES_FOR_EACH_PRODUCER = 1_000_000 * TEST_MULTIPLIER;
+    private static final int TEST_TIMEOUT = 6 * TEST_MULTIPLIER;
+
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(TEST_TIMEOUT);
 
     @Test
     public void testSupplier() {
@@ -84,62 +93,72 @@ public class CabTest {
             cab.consumerNext();
         } catch (final RuntimeException e) {
             ceExceptionCount++;
-        } catch (final InterruptedException e) {
+        } catch (final InterruptedException ignore) {
         }
 
         try {
             cab.producerNext();
         } catch (final ConsumerInterruptedException e) {
             ceExceptionCount++;
-        } catch (final InterruptedException e) {
+        } catch (final InterruptedException ignore) {
         }
 
         try {
             cab.send(null);
         } catch (final ConsumerInterruptedException e) {
             ceExceptionCount++;
-        } catch (final InterruptedException e) {
+        } catch (final InterruptedException ignore) {
         }
 
         assertEquals(3, ceExceptionCount);
     }
 
-    @Test(timeout = 3000)
+    @Test
     public void testSpScBusySpinning() throws InterruptedException {
         testNpSc(new CabBusySpinning<>(BUFFER_SIZE), 1, NUMBER_OF_ENTRIES_FOR_EACH_PRODUCER, false);
     }
 
-    @Test(timeout = 3000)
+    @Test
     public void testSpScYielding() throws InterruptedException {
         testNpSc(new CabYielding<>(BUFFER_SIZE), 1, NUMBER_OF_ENTRIES_FOR_EACH_PRODUCER, false);
     }
 
-    @Test(timeout = 3000)
+    @Test
     public void testSpScBackingOff() throws InterruptedException {
+        testNpSc(new CabBackingOff<>(BUFFER_SIZE, 10, 100), 1, NUMBER_OF_ENTRIES_FOR_EACH_PRODUCER, false);
+    }
+
+    @Test
+    public void testSpScBackingOffSlow() throws InterruptedException {
         testNpSc(new CabBackingOff<>(BUFFER_SIZE, 10, 100), 1, NUMBER_OF_ENTRIES_FOR_EACH_PRODUCER, true);
     }
 
-    @Test(timeout = 3000)
+    @Test
     public void testSpScBlocking() throws InterruptedException {
         testNpSc(new CabBlocking<>(BUFFER_SIZE), 1, NUMBER_OF_ENTRIES_FOR_EACH_PRODUCER, false);
     }
 
-    @Test(timeout = 3000)
+    @Test
     public void test3pScBusySpinning() throws InterruptedException {
         testNpSc(new CabBusySpinning<>(BUFFER_SIZE), 3, NUMBER_OF_ENTRIES_FOR_EACH_PRODUCER, false);
     }
 
-    @Test(timeout = 3000)
+    @Test
     public void test3pScYielding() throws InterruptedException {
         testNpSc(new CabYielding<>(BUFFER_SIZE), 3, NUMBER_OF_ENTRIES_FOR_EACH_PRODUCER, false);
     }
 
-    @Test(timeout = 3000)
+    @Test
     public void test3pScBackingOff() throws InterruptedException {
         testNpSc(new CabBackingOff<>(BUFFER_SIZE, 1000, 10000), 3, NUMBER_OF_ENTRIES_FOR_EACH_PRODUCER, false);
     }
 
-    @Test(timeout = 3000)
+    @Test
+    public void test3pScBackingOffSlow() throws InterruptedException {
+        testNpSc(new CabBackingOff<>(BUFFER_SIZE, 1000, 10000), 3, NUMBER_OF_ENTRIES_FOR_EACH_PRODUCER, true);
+    }
+
+    @Test
     public void test3pScBlocking() throws InterruptedException {
         testNpSc(new CabBlocking<>(BUFFER_SIZE), 3, NUMBER_OF_ENTRIES_FOR_EACH_PRODUCER, false);
     }
@@ -150,7 +169,9 @@ public class CabTest {
             final int numberOfEntriesForEach,
             final boolean slowConsumer) throws InterruptedException {
 
-        final ProducerSenderSet psSet = new ProducerSenderSet(cab, numberOfProducersSenders, numberOfEntriesForEach);
+        final ProducerSenderGroup psSet =
+                new ProducerSenderGroup(cab, numberOfProducersSenders, numberOfEntriesForEach);
+
         final Consumer cs = new Consumer(
                 cab,
                 psSet.size(),
@@ -242,13 +263,13 @@ public class CabTest {
         }
     }
 
-    class ProducerSenderSet {
+    class ProducerSenderGroup {
         private final ProducerSender[] set;
 
         private int totalNumberOfEntries;
         private int totalNumbersOfMessages;
 
-        ProducerSenderSet(
+        ProducerSenderGroup(
                 final Cab<Long, Message> cab,
                 final int numberOfProducers,
                 final int numberOfEntriesForEach) {
@@ -355,6 +376,10 @@ public class CabTest {
 
         public void run() {
             try {
+                final int slowPeriod = (totalNumberOfEntries + totalNumbersOfMessages) / 10;
+
+                int slowIterations = 0;
+
                 while (numberOfEntries < totalNumberOfEntries || numberOfMessages < totalNumbersOfMessages) {
                     final long sequence = cab.consumerNext();
 
@@ -391,7 +416,10 @@ public class CabTest {
                     cab.consumerCommit(sequence);
 
                     if (isSlow) {
-                        LockSupport.parkNanos(1);
+                        if (slowIterations % slowPeriod == 0) {
+                            Thread.sleep(100);
+                        }
+                        slowIterations++;
                     }
                 }
             } catch (final InterruptedException e) {
