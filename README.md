@@ -1,4 +1,4 @@
-# green-cab
+# Green Cab
 
 GC-free (green) low latency structure which combines a CSP-style Channel And a ring Buffer (CAB).
 
