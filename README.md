@@ -2,7 +2,7 @@
 
 GC-free (green) low latency structure which combines a CSP-style Channel And a ring Buffer (CAB).
 
-This structure aims to be a building block of concurrent data processing applications.
+This structure aims to be a building block of concurrent data processing applications. Depending on requirements to CPU usage and/or latency limitations, the structure can be configured to use blocking or lock-free algorithm under the hood.
 
 ## How to build
 
