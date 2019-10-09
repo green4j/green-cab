@@ -2,10 +2,10 @@ package org.green.jmh.cab;
 
 import org.green.cab.Cab;
 
-public class ToNilConsumer extends Thread implements AutoCloseable {
+public class NilConsumer extends Thread implements AutoCloseable {
     private final Cab cab;
 
-    public ToNilConsumer(final Cab cab) {
+    public NilConsumer(final Cab cab) {
         this.cab = cab;
     }
 

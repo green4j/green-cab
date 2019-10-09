@@ -432,6 +432,8 @@ public abstract class Cab<E, M> extends CabPad4 {
                             throw new IllegalStateException();
                     }
 
+                    // we are here while spinning and yielding
+
                     consumerSequence = UNSAFE.getLongVolatile(this, CONSUMER_SEQUENCE_OFFSET);
                     if (consumerSequence == CONSUMER_INTERRUPTED_SEQUENCE) {
                         throw new ConsumerInterruptedException();
@@ -603,14 +605,14 @@ public abstract class Cab<E, M> extends CabPad4 {
 
                     // we are here while spinning and yielding
 
-                    if (Thread.interrupted()) {
-                        throw new InterruptedException();
-                    }
-
                     msg = UNSAFE.getObjectVolatile(this, MESSAGE_OFFSET);
                     if (msg != null) {
                         messageCache = msg;
                         return MESSAGE_RECEIVED_SEQUENCE;
+                    }
+
+                    if (Thread.interrupted()) {
+                        throw new InterruptedException();
                     }
                 }
                 break;

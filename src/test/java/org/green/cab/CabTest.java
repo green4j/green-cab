@@ -39,7 +39,7 @@ public class CabTest {
 
     private static final int BUFFER_SIZE = 10_000;
     private static final int NUMBER_OF_ENTRIES_FOR_EACH_PRODUCER = 1_000_000 * TEST_MULTIPLIER;
-    private static final int TEST_TIMEOUT = 6 * TEST_MULTIPLIER;
+    private static final int TEST_TIMEOUT = 10 * TEST_MULTIPLIER;
 
     @Rule
     public Timeout globalTimeout = Timeout.seconds(TEST_TIMEOUT);

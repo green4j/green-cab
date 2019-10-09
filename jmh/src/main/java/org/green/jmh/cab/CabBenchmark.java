@@ -11,19 +11,19 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 
 public class CabBenchmark {
-    public static final int CAB_SIZE = 1000;
-    public static final int BACKING_OFF_MAX_SPINS = 1000;
-    public static final int BACKING_OFF_MAX_YIELDS = 10000;
+    private static final int CAB_SIZE = 10_000;
+    private static final int BACKING_OFF_MAX_SPINS = 1_000;
+    private static final int BACKING_OFF_MAX_YIELDS = 10_000;
 
     private abstract static class CabSetup {
         Cab cab;
 
-        private ToNilConsumer consumer;
+        private NilConsumer consumer;
 
         @Setup(Level.Trial)
         public void doSetup() {
             cab = prepareCab();
-            consumer = new ToNilConsumer(cab);
+            consumer = new NilConsumer(cab);
             consumer.start();
         }
 
