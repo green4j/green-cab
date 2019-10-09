@@ -25,7 +25,8 @@ An entry producer:
     try {
         sequence = cab.producerNext();
     } catch (ConsumerInterruptedException e) {
-        // happens if the consumer was interrupted by consumerInterrupt() and cannot process incoming entries
+        // happens if the consumer was interrupted by consumerInterrupt()
+        // and cannot process incoming entries
     } catch (InterruptedException e) {
          // happens if the current thread was interrupted
     }
@@ -45,7 +46,8 @@ A message sender:
     try {
         cab.send(message);
     } catch (ConsumerInterruptedException e) {
-        // happens if the consumer was interrupted by consumerInterrupt() and cannot process incoming entries
+        // happens if the consumer was interrupted by consumerInterrupt()
+        // and cannot process incoming entries
     } catch (InterruptedException e) {
          // happens if the current thread was interrupted
     }
@@ -63,7 +65,7 @@ A consumer:
         // happens if the current thread was interrupted
         
         cab.consumerInterrupt(); // notify all that the consumer
-        // is not able to process any data anymore
+        // is not able to process incoming entries anymore
     }
 
     if (sequence == Cab.MESSAGE_RECEIVED_SEQUENCE) { // a message can be read from the Channel
