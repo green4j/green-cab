@@ -78,23 +78,30 @@ A consumer:
 
 Some synthetic tests for JMH can be found in the [jmh](https://github.com/anatolygudkov/green-cab/tree/master/jmh/src/main/java/org/green/jmh/cab) folder.
 
-The result of the throughput benchmarking is the following:
+Entry processing throughput with one and two producer's threads:
 
 ```
-Benchmark                                                    Mode  Cnt         Score         Error  Units
-EntryProducerBenchmark.oneEntryProducerWithCabBackingOff    thrpt    9  12897793.460 ±  437701.321  ops/s
-EntryProducerBenchmark.oneEntryProducerWithCabBlocking      thrpt    9   5883291.611 ±  577068.318  ops/s
-EntryProducerBenchmark.oneEntryProducerWithCabYielding      thrpt    9  12483694.703 ± 1355017.878  ops/s
-EntryProducerBenchmark.twoEntryProducersWithCabBackingOff   thrpt    9   6887992.941 ±  511990.970  ops/s
-EntryProducerBenchmark.twoEntryProducersWithCabBlocking     thrpt    9   6966526.063 ±  446328.856  ops/s
-EntryProducerBenchmark.twoEntryProducersWithCabYielding     thrpt    9  21944251.682 ±  218787.736  ops/s
-MessageSenderBenchmark.oneMessageSenderWithCabBlocking      thrpt    9    228201.934 ±    3017.170  ops/s
-MessageSenderBenchmark.oneMessageSenderWithCabBlockingOff   thrpt    9   4398047.582 ±  276940.837  ops/s
-MessageSenderBenchmark.oneMessageSenderWithCabYielding      thrpt    9   3108094.687 ±  121039.393  ops/s
-MessageSenderBenchmark.twoMessageSendersWithCabBlocking     thrpt    9    137979.280 ±    2860.427  ops/s
-MessageSenderBenchmark.twoMessageSendersWithCabBlockingOff  thrpt    9   3687752.121 ±  336264.454  ops/s
-MessageSenderBenchmark.twoMessageSendersWithCabYielding     thrpt    9   3026137.784 ±  162079.191  ops/s
+Benchmark                                                   Mode  Cnt         Score         Error  Units
+EntryProducerBenchmark.oneEntryProducerWithCabBackingOff   thrpt    9  12237886.159 ±  777387.545  ops/s
+EntryProducerBenchmark.oneEntryProducerWithCabBlocking     thrpt    9   5893786.822 ±  504748.345  ops/s
+EntryProducerBenchmark.oneEntryProducerWithCabYielding     thrpt    9  12403693.354 ± 1184266.375  ops/s
+EntryProducerBenchmark.twoEntryProducersWithCabBackingOff  thrpt    9   8540494.508 ±  560519.508  ops/s
+EntryProducerBenchmark.twoEntryProducersWithCabBlocking    thrpt    9   7328716.085 ±  406898.987  ops/s
+EntryProducerBenchmark.twoEntryProducersWithCabYielding    thrpt    9  22296090.484 ± 1341923.354  ops/s
 ```
+
+Message sending throughput with one and two sender's threads:
+
+```
+Benchmark                                                    Mode  Cnt        Score        Error  Units
+MessageSenderBenchmark.oneMessageSenderWithCabBlocking      thrpt    9   223982.624 ±   8336.329  ops/s
+MessageSenderBenchmark.oneMessageSenderWithCabBlockingOff   thrpt    9  4383103.475 ± 258791.607  ops/s
+MessageSenderBenchmark.oneMessageSenderWithCabYielding      thrpt    9  3036892.261 ±  78552.003  ops/s
+MessageSenderBenchmark.twoMessageSendersWithCabBlocking     thrpt    9   136337.447 ±   1713.674  ops/s
+MessageSenderBenchmark.twoMessageSendersWithCabBlockingOff  thrpt    9  3713929.483 ± 334039.100  ops/s
+MessageSenderBenchmark.twoMessageSendersWithCabYielding     thrpt    9  3084831.713 ±  53135.594  ops/s
+```
+
 The tests were made on a laptop with:
 ```
 Intel Core i7-8750H CPU @ 2.20GHz + DDR4 16GiB @ 2667MHz
@@ -105,4 +112,5 @@ VM options: -Xmx3072m -Xms3072m -Dfile.encoding=UTF-8 -Duser.country=US -Duser.l
 ```
 
 ## License
+
 The code is available under the terms of the [MIT License](http://opensource.org/licenses/MIT).
