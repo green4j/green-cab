@@ -62,7 +62,8 @@ A consumer:
     } catch (InterruptedException e) {
         // happens if the current thread was interrupted
         
-        cab.consumerInterrupt(); // notify all that the consumer is not able to process any data anymore
+        cab.consumerInterrupt(); // notify all that the consumer
+        // is not able to process any data anymore
     }
 
     if (sequence == Cab.MESSAGE_RECEIVED_SEQUENCE) { // a message can be read from the Channel
