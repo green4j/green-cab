@@ -3,5 +3,5 @@
         "-//Puppy Crawl//DTD Suppressions 1.0//EN"
         "http://www.puppycrawl.com/dtds/suppressions_1_0.dtd">
 <suppressions>
-    <suppress files="Cab.java" checks="MethodLength"/>
+    <!--suppress files="xxx.java|yyy.java" checks="MethodLength|FallThrough"/-->
 </suppressions>

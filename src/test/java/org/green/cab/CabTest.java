@@ -33,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 public class CabTest {
-    private static final boolean MAX_MODE = Boolean.getBoolean("org.green.cab.text.max_mode");
+    private static final boolean MAX_MODE = Boolean.getBoolean("org.green.cab.test.max_mode");
 
     private static final int TEST_MULTIPLIER = MAX_MODE ? 20 : 1;
 
