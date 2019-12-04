@@ -104,10 +104,10 @@ Message sending throughput with one and two sender's threads:
 ```
 Benchmark                                                    Mode  Cnt        Score        Error  Units
 MessageSenderBenchmark.oneMessageSenderWithCabBlocking      thrpt    9   223982.624 ±   8336.329  ops/s
-MessageSenderBenchmark.oneMessageSenderWithCabBlockingOff   thrpt    9  4383103.475 ± 258791.607  ops/s
+MessageSenderBenchmark.oneMessageSenderWithCabBackingOff    thrpt    9  4383103.475 ± 258791.607  ops/s
 MessageSenderBenchmark.oneMessageSenderWithCabYielding      thrpt    9  3036892.261 ±  78552.003  ops/s
 MessageSenderBenchmark.twoMessageSendersWithCabBlocking     thrpt    9   136337.447 ±   1713.674  ops/s
-MessageSenderBenchmark.twoMessageSendersWithCabBlockingOff  thrpt    9  3713929.483 ± 334039.100  ops/s
+MessageSenderBenchmark.twoMessageSendersWithCabBackingOff   thrpt    9  3713929.483 ± 334039.100  ops/s
 MessageSenderBenchmark.twoMessageSendersWithCabYielding     thrpt    9  3084831.713 ±  53135.594  ops/s
 ```
 
