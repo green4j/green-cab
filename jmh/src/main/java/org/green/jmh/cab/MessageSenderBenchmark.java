@@ -36,7 +36,7 @@ public class MessageSenderBenchmark extends CabBenchmark {
 
     @Benchmark
     @Threads(1)
-    public void oneMessageSenderWithCabBlockingOff(
+    public void oneMessageSenderWithCabBackingOff(
             final CabBackingOffSetup cabSetup, final Blackhole blackhole)
             throws ConsumerInterruptedException, InterruptedException {
 
@@ -45,7 +45,7 @@ public class MessageSenderBenchmark extends CabBenchmark {
 
     @Benchmark
     @Threads(2)
-    public void twoMessageSendersWithCabBlockingOff(
+    public void twoMessageSendersWithCabBackingOff(
             final CabBackingOffSetup cabSetup, final Blackhole blackhole)
             throws ConsumerInterruptedException, InterruptedException {
 
