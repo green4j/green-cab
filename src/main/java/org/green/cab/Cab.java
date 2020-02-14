@@ -42,7 +42,7 @@ abstract class ConsumerSequence extends CabPad0 {
 
 abstract class CabPad1 extends ConsumerSequence {
     protected long p11, p12, p13, p14, p15, p16, p17;
-    protected long p18, p19, p110, p112, p113, p114, p115;
+    protected long p18, p19, p110, p111, p112, p113, p114, p115;
 }
 
 abstract class UncommittedProducersSequence extends CabPad1 {
@@ -51,7 +51,7 @@ abstract class UncommittedProducersSequence extends CabPad1 {
 
 abstract class CabPad2 extends UncommittedProducersSequence {
     protected long p21, p22, p23, p24, p25, p26, p27;
-    protected long p28, p29, p210, p212, p213, p214, p215;
+    protected long p28, p29, p210, p211, p212, p213, p214, p215;
 }
 
 abstract class Message extends CabPad2 {
@@ -60,7 +60,7 @@ abstract class Message extends CabPad2 {
 
 abstract class CabPad3 extends Message {
     protected long p31, p32, p33, p34, p35, p36, p37;
-    protected long p38, p39, p310, p312, p313, p314, p315;
+    protected long p38, p39, p310, p311, p312, p313, p314, p315;
 }
 
 abstract class MessageCache extends CabPad3 {
@@ -69,7 +69,7 @@ abstract class MessageCache extends CabPad3 {
 
 abstract class CabPad4 extends MessageCache {
     protected long p41, p42, p43, p44, p45, p46, p47;
-    protected long p48, p49, p410, p412, p413, p414, p415;
+    protected long p48, p49, p410, p411, p412, p413, p414, p415;
 }
 
 /**
