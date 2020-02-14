@@ -66,6 +66,11 @@ A consumer:
         
         cab.consumerInterrupt(); // notify all that the consumer
         // is not able to process incoming entries anymore
+        
+        Thread.interrupt(); // re-set the interrupted flag canonically
+        
+        return; // just return for example,
+                // since the consumer just stopped/interrupted and the cab isn't operational anymore
     }
 
     if (sequence == Cab.MESSAGE_RECEIVED_SEQUENCE) { // a message can be read from the Channel
