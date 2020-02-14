@@ -91,24 +91,24 @@ Entry processing throughput with one and two producer's threads:
 
 ```
 Benchmark                                                   Mode  Cnt         Score         Error  Units
-EntryProducerBenchmark.oneEntryProducerWithCabBackingOff   thrpt    9  12237886.159 ±  777387.545  ops/s
-EntryProducerBenchmark.oneEntryProducerWithCabBlocking     thrpt    9   5893786.822 ±  504748.345  ops/s
-EntryProducerBenchmark.oneEntryProducerWithCabYielding     thrpt    9  12403693.354 ± 1184266.375  ops/s
-EntryProducerBenchmark.twoEntryProducersWithCabBackingOff  thrpt    9   8540494.508 ±  560519.508  ops/s
-EntryProducerBenchmark.twoEntryProducersWithCabBlocking    thrpt    9   7328716.085 ±  406898.987  ops/s
-EntryProducerBenchmark.twoEntryProducersWithCabYielding    thrpt    9  22296090.484 ± 1341923.354  ops/s
+EntryProducerBenchmark.oneEntryProducerWithCabBackingOff   thrpt    9  14685578.112 ±  157414.731  ops/s
+EntryProducerBenchmark.oneEntryProducerWithCabBlocking     thrpt    9   6028480.502 ±  552552.076  ops/s
+EntryProducerBenchmark.oneEntryProducerWithCabYielding     thrpt    9  15201286.678 ±  562355.116  ops/s
+EntryProducerBenchmark.twoEntryProducersWithCabBackingOff  thrpt    9   6769915.009 ±  573968.010  ops/s
+EntryProducerBenchmark.twoEntryProducersWithCabBlocking    thrpt    9   7377155.892 ±  352023.481  ops/s
+EntryProducerBenchmark.twoEntryProducersWithCabYielding    thrpt    9  25064254.508 ± 1287480.828  ops/s
 ```
 
 Message sending throughput with one and two sender's threads:
 
 ```
 Benchmark                                                    Mode  Cnt        Score        Error  Units
-MessageSenderBenchmark.oneMessageSenderWithCabBlocking      thrpt    9   223982.624 ±   8336.329  ops/s
-MessageSenderBenchmark.oneMessageSenderWithCabBackingOff    thrpt    9  4383103.475 ± 258791.607  ops/s
-MessageSenderBenchmark.oneMessageSenderWithCabYielding      thrpt    9  3036892.261 ±  78552.003  ops/s
-MessageSenderBenchmark.twoMessageSendersWithCabBlocking     thrpt    9   136337.447 ±   1713.674  ops/s
-MessageSenderBenchmark.twoMessageSendersWithCabBackingOff   thrpt    9  3713929.483 ± 334039.100  ops/s
-MessageSenderBenchmark.twoMessageSendersWithCabYielding     thrpt    9  3084831.713 ±  53135.594  ops/s
+MessageSenderBenchmark.oneMessageSenderWithCabBackingOff   thrpt    9   4221098.961 ±  107711.639  ops/s
+MessageSenderBenchmark.oneMessageSenderWithCabBlocking     thrpt    9    220863.607 ±    3205.687  ops/s
+MessageSenderBenchmark.oneMessageSenderWithCabYielding     thrpt    9   2881300.448 ±  392807.702  ops/s
+MessageSenderBenchmark.twoMessageSendersWithCabBackingOff  thrpt    9   3949405.608 ±  120913.039  ops/s
+MessageSenderBenchmark.twoMessageSendersWithCabBlocking    thrpt    9    131339.835 ±    1773.882  ops/s
+MessageSenderBenchmark.twoMessageSendersWithCabYielding    thrpt    9   2976458.994 ±  366736.779  ops/s
 ```
 
 The tests were made on a laptop with:
