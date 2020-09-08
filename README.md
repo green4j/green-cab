@@ -1,6 +1,6 @@
 # Green Cab
 
-GC-free (green) low latency structure which combines a CSP-style Channel And a ring Buffer (CAB).
+GC-free (green) low latency structure which combines a CSP-style Channel And a blocking ring Buffer (CAB).
 
 This structure aims to be a building block of concurrent data processing applications. Depending on requirements to CPU usage and/or latency limitations, the structure can be configured to use blocking or lock-free algorithm under the hood.
 
@@ -116,7 +116,7 @@ MessageSenderBenchmark.twoMessageSendersWithCabBlocking    thrpt    9    131339.
 MessageSenderBenchmark.twoMessageSendersWithCabYielding    thrpt    9   2976458.994 ±  366736.779  ops/s
 ```
 
-The tests were made on a laptop with:
+The tests were done on a laptop with:
 ```
 Intel Core i7-8750H CPU @ 2.20GHz + DDR4 16GiB @ 2667MHz
 Linux 5.0.0-27-generic #28-Ubuntu SMP Tue Aug 20 19:53:07 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux
