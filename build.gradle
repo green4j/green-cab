@@ -5,8 +5,6 @@ plugins {
 
 group = projectGroup
 version = projectVersion
-sourceCompatibility = projectSourceCompatibility
-targetCompatibility = projectSourceCompatibility
 
 subprojects {
     apply plugin: 'java'
@@ -15,21 +13,21 @@ subprojects {
 allprojects {
     apply plugin: 'checkstyle'
 
+    sourceCompatibility = projectSourceCompatibility
+    targetCompatibility = projectSourceCompatibility
+
     repositories {
         mavenCentral()
     }
 
-    dependencies {
-        checkstyle 'com.puppycrawl.tools:checkstyle:8.25'
-    }
-
     checkstyle {
-        toolVersion = '8.25'
+        toolVersion = '8.42'
     }
 }
 
 dependencies {
-    testCompile 'junit:junit:4.12'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
 }
 
 test {
@@ -55,6 +53,10 @@ javadoc {
     }
 }
 
+jacoco {
+    toolVersion = "0.8.7"
+}
+
 jacocoTestReport {
     reports {
         xml.enabled true
@@ -65,6 +67,6 @@ jacocoTestReport {
 check.dependsOn jacocoTestReport
 
 wrapper {
-    gradleVersion = '4.10.2'
+    gradleVersion = '7.0.2'
     distributionType = 'ALL'
 }

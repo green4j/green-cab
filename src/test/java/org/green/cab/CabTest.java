@@ -23,14 +23,14 @@
  */
 package org.green.cab;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.Timeout;
+import org.junit.jupiter.api.Test;
 
 import java.util.function.Supplier;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static java.time.Duration.ofSeconds;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTimeout;
 
 public class CabTest {
     private static final boolean MAX_MODE = Boolean.getBoolean("org.green.cab.test.max_mode");
@@ -41,76 +41,80 @@ public class CabTest {
     private static final int NUMBER_OF_ENTRIES_FOR_EACH_PRODUCER = 1_000_000 * TEST_MULTIPLIER;
     private static final int TEST_TIMEOUT = 10 * TEST_MULTIPLIER;
 
-    @Rule
-    public Timeout globalTimeout = Timeout.seconds(TEST_TIMEOUT);
 
     @Test
     public void testSupplier() {
-        final Cab<Long, Object> cab = new CabBusySpinning<>(BUFFER_SIZE, new Supplier<Long>() {
-            long value = -1;
+        assertTimeout(ofSeconds(TEST_TIMEOUT), () -> {
+            final Cab<Long, Object> cab = new CabBusySpinning<>(BUFFER_SIZE, new Supplier<Long>() {
+                long value = -1;
 
-            @Override
-            public Long get() {
-                value++;
-                return value;
+                @Override
+                public Long get() {
+                    value++;
+                    return value;
+                }
+            });
+            for (int i = 0; i < cab.bufferSize(); i++) {
+                assertEquals(i, cab.getEntry(i).longValue());
             }
         });
-        for (int i = 0; i < cab.bufferSize(); i++) {
-            assertEquals(i, cab.getEntry(i).longValue());
-        }
     }
 
     @Test
     public void testRemoveEntry() {
-        final Cab<Long, Object> cab = new CabBusySpinning<>(BUFFER_SIZE, new Supplier<Long>() {
-            long value = -1;
+        assertTimeout(ofSeconds(TEST_TIMEOUT), () -> {
+            final Cab<Long, Object> cab = new CabBusySpinning<>(BUFFER_SIZE, new Supplier<Long>() {
+                long value = -1;
 
-            @Override
-            public Long get() {
-                value++;
-                return value;
-            }
+                @Override
+                public Long get() {
+                    value++;
+                    return value;
+                }
+            });
+
+            final int index = BUFFER_SIZE / 2;
+
+            final long entry = cab.removeEntry(index);
+
+            assertEquals(index, entry);
+
+            assertNull(cab.getEntry(index));
         });
-
-        final int index = BUFFER_SIZE / 2;
-
-        final long entry = cab.removeEntry(index);
-
-        assertEquals(index, entry);
-
-        assertNull(cab.getEntry(index));
     }
 
     @Test
     public void testConsumerInterrupted() {
-        final Cab<Long, Object> cab = new CabBusySpinning<>(BUFFER_SIZE);
+        assertTimeout(ofSeconds(TEST_TIMEOUT), () -> {
+            final Cab<Long, Object> cab = new CabBusySpinning<>(BUFFER_SIZE);
 
-        cab.consumerInterrupt();
+            cab.consumerInterrupt();
 
-        int ceExceptionCount = 0;
+            int ceExceptionCount = 0;
 
-        try {
-            cab.consumerNext();
-        } catch (final RuntimeException e) {
-            ceExceptionCount++;
-        } catch (final InterruptedException ignore) {
-        }
+            try {
+                cab.consumerNext();
+            } catch (final RuntimeException e) {
+                ceExceptionCount++;
+            } catch (final InterruptedException ignore) {
+            }
 
-        try {
-            cab.producerNext();
-        } catch (final ConsumerInterruptedException e) {
-            ceExceptionCount++;
-        } catch (final InterruptedException ignore) {
-        }
+            try {
+                cab.producerNext();
+            } catch (final ConsumerInterruptedException e) {
+                ceExceptionCount++;
+            } catch (final InterruptedException ignore) {
+            }
 
-        try {
-            cab.send(null);
-        } catch (final ConsumerInterruptedException e) {
-            ceExceptionCount++;
-        } catch (final InterruptedException ignore) {
-        }
+            try {
+                cab.send(null);
+            } catch (final ConsumerInterruptedException e) {
+                ceExceptionCount++;
+            } catch (final InterruptedException ignore) {
+            }
 
-        assertEquals(3, ceExceptionCount);
+            assertEquals(3, ceExceptionCount);
+        });
     }
 
     @Test
@@ -167,29 +171,31 @@ public class CabTest {
             final Cab<Long, Message> cab,
             final int numberOfProducersSenders,
             final int numberOfEntriesForEach,
-            final boolean slowConsumer) throws InterruptedException {
+            final boolean slowConsumer) {
+        assertTimeout(ofSeconds(TEST_TIMEOUT), () -> {
 
-        final ProducerSenderGroup psSet =
-                new ProducerSenderGroup(cab, numberOfProducersSenders, numberOfEntriesForEach);
+            final ProducerSenderGroup psSet =
+                    new ProducerSenderGroup(cab, numberOfProducersSenders, numberOfEntriesForEach);
 
-        final Consumer cs = new Consumer(
-                cab,
-                psSet.size(),
-                psSet.getTotalNumberOfEntries(),
-                psSet.getTotalNumberOfMessages(),
-                slowConsumer);
+            final Consumer cs = new Consumer(
+                    cab,
+                    psSet.size(),
+                    psSet.getTotalNumberOfEntries(),
+                    psSet.getTotalNumberOfMessages(),
+                    slowConsumer);
 
-        cs.start();
-        psSet.start();
+            cs.start();
+            psSet.start();
 
-        psSet.join();
-        cs.join();
+            psSet.join();
+            cs.join();
 
-        assertEquals(psSet.getTotalNumberOfEntries(), cs.getNumberOfEntries());
-        assertEquals(psSet.getTotalNumberOfMessages(), cs.getNumberOfMessages());
+            assertEquals(psSet.getTotalNumberOfEntries(), cs.getNumberOfEntries());
+            assertEquals(psSet.getTotalNumberOfMessages(), cs.getNumberOfMessages());
 
-        assertEquals(1, cs.getMaxEntryValueDiff());
-        assertEquals(1, cs.getMaxMessageValueDiff());
+            assertEquals(1, cs.getMaxEntryValueDiff());
+            assertEquals(1, cs.getMaxMessageValueDiff());
+        });
     }
 
     class Message {

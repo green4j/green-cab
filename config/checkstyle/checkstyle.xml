@@ -3,7 +3,7 @@
         "https://checkstyle.org/dtds/configuration_1_3.dtd">
 <module name="Checker">
     <module name="SuppressionFilter">
-        <property name="file" value="config/checkstyle/suppressions.xml"/>
+        <property name="file" value="${config_loc}/suppressions.xml"/>
     </module>
 
     <module name="SeverityMatchFilter">
@@ -164,8 +164,6 @@
             <property name="message" value="Trailing whitespace"/>
         </module>
 
-        <module name="JavadocMethod">
-            <property name="allowUndeclaredRTE" value="true"/>
-        </module>
+        <module name="JavadocMethod"/>
     </module>
 </module>
