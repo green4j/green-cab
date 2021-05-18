@@ -358,8 +358,6 @@ public abstract class Cab<E, M> extends CabPad4 {
         switch (waitingStaregy) {
             case BUSY_SPINNING: {
                 while (!UNSAFE.compareAndSwapObject(this, MESSAGE_OFFSET, null, msg)) {
-                    Utils.onSpinWait();
-
                     consumerSequence = UNSAFE.getLongVolatile(this, CONSUMER_SEQUENCE_OFFSET);
                     if (consumerSequence == CONSUMER_INTERRUPTED_SEQUENCE) {
                         throw new ConsumerInterruptedException();
@@ -405,8 +403,6 @@ public abstract class Cab<E, M> extends CabPad4 {
                             break;
 
                         case BACKING_OFF_SPINNING_STATE:
-                            Utils.onSpinWait();
-
                             if (++spins > maxSpins) {
                                 state = BACKING_OFF_YIELDING_STATE;
                             }
@@ -520,8 +516,6 @@ public abstract class Cab<E, M> extends CabPad4 {
         switch (waitingStaregy) {
             case BUSY_SPINNING: {
                 while (UNSAFE.getIntVolatile(states, stateAddress) == 0) {
-                    Utils.onSpinWait();
-
                     if (Thread.interrupted()) {
                         throw new InterruptedException();
                     }
@@ -566,7 +560,6 @@ public abstract class Cab<E, M> extends CabPad4 {
                             break;
 
                         case BACKING_OFF_SPINNING_STATE:
-                            Utils.onSpinWait();
                             if (++spins > maxSpins) {
                                 state = BACKING_OFF_YIELDING_STATE;
                             }
