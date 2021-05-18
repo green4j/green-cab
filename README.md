@@ -96,33 +96,33 @@ Entry processing throughput with one and two producer's threads:
 
 ```
 Benchmark                                                   Mode  Cnt         Score         Error  Units
-EntryProducerBenchmark.oneEntryProducerWithCabBackingOff   thrpt    9  14685578.112 ±  157414.731  ops/s
-EntryProducerBenchmark.oneEntryProducerWithCabBlocking     thrpt    9   6028480.502 ±  552552.076  ops/s
-EntryProducerBenchmark.oneEntryProducerWithCabYielding     thrpt    9  15201286.678 ±  562355.116  ops/s
-EntryProducerBenchmark.twoEntryProducersWithCabBackingOff  thrpt    9   6769915.009 ±  573968.010  ops/s
-EntryProducerBenchmark.twoEntryProducersWithCabBlocking    thrpt    9   7377155.892 ±  352023.481  ops/s
-EntryProducerBenchmark.twoEntryProducersWithCabYielding    thrpt    9  25064254.508 ± 1287480.828  ops/s
+EntryProducerBenchmark.oneEntryProducerWithCabBackingOff   thrpt    9  11490914.693 ± 2650697.553  ops/s
+EntryProducerBenchmark.oneEntryProducerWithCabBlocking     thrpt    9   6341016.539 ±  329880.081  ops/s
+EntryProducerBenchmark.oneEntryProducerWithCabYielding     thrpt    9  11385864.355 ± 1145172.281  ops/s
+EntryProducerBenchmark.twoEntryProducersWithCabBackingOff  thrpt    9   5402727.022 ±  274157.841  ops/s
+EntryProducerBenchmark.twoEntryProducersWithCabBlocking    thrpt    9   5049559.367 ±  660839.674  ops/s
+EntryProducerBenchmark.twoEntryProducersWithCabYielding    thrpt    9  21733518.532 ±  967500.637  ops/s
 ```
 
 Message sending throughput with one and two sender's threads:
 
 ```
-Benchmark                                                    Mode  Cnt        Score        Error  Units
-MessageSenderBenchmark.oneMessageSenderWithCabBackingOff   thrpt    9   4221098.961 ±  107711.639  ops/s
-MessageSenderBenchmark.oneMessageSenderWithCabBlocking     thrpt    9    220863.607 ±    3205.687  ops/s
-MessageSenderBenchmark.oneMessageSenderWithCabYielding     thrpt    9   2881300.448 ±  392807.702  ops/s
-MessageSenderBenchmark.twoMessageSendersWithCabBackingOff  thrpt    9   3949405.608 ±  120913.039  ops/s
-MessageSenderBenchmark.twoMessageSendersWithCabBlocking    thrpt    9    131339.835 ±    1773.882  ops/s
-MessageSenderBenchmark.twoMessageSendersWithCabYielding    thrpt    9   2976458.994 ±  366736.779  ops/s
+Benchmark                                                   Mode  Cnt        Score        Error  Units
+MessageSenderBenchmark.oneMessageSenderWithCabBackingOff   thrpt    9  3951946.807 ±  87624.271  ops/s
+MessageSenderBenchmark.oneMessageSenderWithCabBlocking     thrpt    9   226056.848 ±   4765.628  ops/s
+MessageSenderBenchmark.oneMessageSenderWithCabYielding     thrpt    9  2642117.388 ± 259434.324  ops/s
+MessageSenderBenchmark.twoMessageSendersWithCabBackingOff  thrpt    9  2880319.410 ± 122405.335  ops/s
+MessageSenderBenchmark.twoMessageSendersWithCabBlocking    thrpt    9   130180.318 ±   3236.460  ops/s
+MessageSenderBenchmark.twoMessageSendersWithCabYielding    thrpt    9  2449810.822 ± 204604.388  ops/s
 ```
 
 The tests were done on a laptop with:
 ```
 Intel Core i7-8750H CPU @ 2.20GHz + DDR4 16GiB @ 2667MHz
 Linux 5.0.0-27-generic #28-Ubuntu SMP Tue Aug 20 19:53:07 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux
-JMH version: 1.21
-VM version: JDK 1.8.0_161, Java HotSpot(TM) 64-Bit Server VM, 25.161-b12
-VM options: -Xmx3072m -Xms3072m -Dfile.encoding=UTF-8 -Duser.country=US -Duser.language=en -Duser.variant
+# JMH version: 1.31
+# VM version: JDK 11.0.11, OpenJDK 64-Bit Server VM, 11.0.11+9
+# VM options: -Xmx3072m -Xms3072m -Dfile.encoding=UTF-8 -Duser.country=US -Duser.language=en -Duser.variant
 ```
 
 ## License
