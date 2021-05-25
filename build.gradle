@@ -31,6 +31,7 @@ dependencies {
 }
 
 test {
+    useJUnitPlatform()
     testLogging {
         showStandardStreams = true
         exceptionFormat = 'full'
@@ -65,8 +66,3 @@ jacocoTestReport {
 }
 
 check.dependsOn jacocoTestReport
-
-wrapper {
-    gradleVersion = '7.0.2'
-    distributionType = 'ALL'
-}
